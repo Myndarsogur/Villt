@@ -24,8 +24,9 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 0; /* Removed padding to eliminate gray box */
-            margin: 10px; /* Adjust for better spacing */
+            padding: 20px;
+            border: 3px solid #fff;
+            margin: 20px;
             animation: expand 2s ease-in-out;
         }
         .section:nth-child(odd) {
@@ -70,14 +71,10 @@
             font-family: 'Arial', sans-serif;
             font-size: 2.5em;
             font-weight: 300;
-            color: #add8e6; /* Light blue */
-            text-shadow: 0 0 10px #00ffff, 0 0 20px #ffffff; /* Frosty glow */
-        }
-        #arctic a span {
-            font-size: 1.2em;
-        }
-        #arctic a .highlight {
-            font-size: 3em; /* Larger A, C, J */
+            color: #fff;
+            background: linear-gradient(to bottom, #fff 50%, #00f 50%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         #arid {
             font-family: Impact, sans-serif;
@@ -106,7 +103,7 @@
             display: inline-block;
             cursor: pointer;
             position: absolute; /* Changed to absolute for dynamic movement */
-            animation: circular-motion 10s linear infinite;
+            animation: circular-motion 10s linear infinite, spin 2s linear infinite;
         }
         @keyframes circular-motion {
             0% {
@@ -123,6 +120,14 @@
             }
             100% {
                 transform: translate(0, 0);
+            }
+        }
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
             }
         }
         .emoji {
@@ -180,9 +185,7 @@
     <h1>ULTramEgasidan</h1>
     <div class="section-container">
         <div class="section" id="arctic">
-            <a href="ARCTIC/index.html">
-                <span class="highlight">A</span>rctic <span class="highlight">C</span>omics <span class="highlight">J</span>ournal
-            </a>
+            <a href="ARCTIC/index.html">The Arctic Comics Journal</a>
         </div>
         <div class="section" id="arid">
             <a href="Arid2024/index.html">Árið 2024 í myndasögum</a>
