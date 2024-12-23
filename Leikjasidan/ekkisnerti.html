@@ -22,8 +22,8 @@
             margin: 10px;
             position: absolute;
             transform-style: preserve-3d;
-            transform: rotateX(0deg) rotateY(0deg);
-            transition: transform 0.2s ease-in-out;
+            transform: rotateX(30deg) rotateY(30deg);
+            transition: transform 0.2s;
         }
         .box .front, .box .back, .box .left, .box .right, .box .top, .box .bottom {
             position: absolute;
@@ -54,7 +54,7 @@
 </head>
 <body>
 
-<div id="box1" class="box" onclick="location.href='Formleikurinn/index.html'">
+<div id="box1" class="box">
     <div class="front">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M12 2C7.589 2 4 6.127 4 9c0 3.528 2.5 6 6 6h4c3.5 0 6-2.472 6-6 0-2.873-3.589-7-8-7z"/>
@@ -67,58 +67,34 @@
     <div class="bottom"></div>
 </div>
 
-<div id="box2" class="box" onclick="location.href='Teiknileikurinn/index.html'">
-    <div class="front">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"/>
-        </svg>
-    </div>
-    <div class="back"></div>
-    <div class="left"></div>
-    <div class="right"></div>
-    <div class="top"></div>
-    <div class="bottom"></div>
-</div>
-
-<div id="box3" class="box" onclick="location.href='Skograekt\ simulator/index.html'">
-    <div class="front">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <rect width="12" height="12" x="6" y="6" rx="2"/>
-        </svg>
-    </div>
-    <div class="back"></div>
-    <div class="left"></div>
-    <div class="right"></div>
-    <div class="top"></div>
-    <div class="bottom"></div>
-</div>
-
 <script>
-    let lastX, lastY;
-    const boxes = document.querySelectorAll('.box');
+    let boxes = document.querySelectorAll('.box');
+    let shakeThreshold = 15;
 
-    document.addEventListener('mousemove', (event) => {
-        if (lastX !== undefined && lastY !== undefined) {
-            let dx = event.clientX - lastX;
-            let dy = event.clientY - lastY;
+    if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', (event) => {
+            let beta = event.beta; // X-axis
+            let gamma = event.gamma; // Y-axis
 
-            boxes.forEach((box) => {
-                let style = window.getComputedStyle(box);
-                let transform = style.transform.match(/matrix3d\((.+)\)/);
-
-                if (transform) {
-                    let values = transform[1].split(', ');
-                    let rotateX = parseFloat(values[5]);
-                    let rotateY = parseFloat(values[1]);
-
-                    box.style.transform = `rotateX(${rotateX + dy * 0.2}deg) rotateY(${rotateY + dx * 0.2}deg)`;
-                }
+            boxes.forEach(box => {
+                box.style.transform = `rotateX(${beta}deg) rotateY(${gamma}deg)`;
             });
-        }
+        });
+    }
 
-        lastX = event.clientX;
-        lastY = event.clientY;
-    });
+    if (window.DeviceMotionEvent) {
+        window.addEventListener('devicemotion', (event) => {
+            let x = event.acceleration.x;
+            let y = event.acceleration.y;
+            let z = event.acceleration.z;
+
+            if (Math.abs(x) > shakeThreshold || Math.abs(y) > shakeThreshold || Math.abs(z) > shakeThreshold) {
+                boxes.forEach(box => {
+                    box.style.transform = `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px)`;
+                });
+            }
+        });
+    }
 </script>
 
 </body>
