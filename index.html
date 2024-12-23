@@ -24,9 +24,8 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 20px;
-            border: 3px solid #fff;
-            margin: 20px;
+            padding: 0; /* Removed padding to eliminate gray box */
+            margin: 10px; /* Adjust for better spacing */
             animation: expand 2s ease-in-out;
         }
         .section:nth-child(odd) {
@@ -67,6 +66,19 @@
             padding: 50px;
             border: 3px solid #ff00ff;
         }
+        #arctic a {
+            font-family: 'Arial', sans-serif;
+            font-size: 2.5em;
+            font-weight: 300;
+            color: #add8e6; /* Light blue */
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #ffffff; /* Frosty glow */
+        }
+        #arctic a span {
+            font-size: 1.2em;
+        }
+        #arctic a .highlight {
+            font-size: 3em; /* Larger A, C, J */
+        }
         #arid {
             font-family: Impact, sans-serif;
             font-size: 2em;
@@ -93,15 +105,24 @@
             padding: 20px;
             display: inline-block;
             cursor: pointer;
-            position: relative;
-            animation: spin 2s linear infinite;
+            position: absolute; /* Changed to absolute for dynamic movement */
+            animation: circular-motion 10s linear infinite;
         }
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
+        @keyframes circular-motion {
+            0% {
+                transform: translate(0, 0);
             }
-            to {
-                transform: rotate(360deg);
+            25% {
+                transform: translate(50vw, -10vh);
+            }
+            50% {
+                transform: translate(100vw, 50vh);
+            }
+            75% {
+                transform: translate(50vw, 100vh);
+            }
+            100% {
+                transform: translate(0, 0);
             }
         }
         .emoji {
@@ -159,7 +180,9 @@
     <h1>ULTramEgasidan</h1>
     <div class="section-container">
         <div class="section" id="arctic">
-            <a href="ARCTIC/index.html">The Arctic Comics Journal</a>
+            <a href="ARCTIC/index.html">
+                <span class="highlight">A</span>rctic <span class="highlight">C</span>omics <span class="highlight">J</span>ournal
+            </a>
         </div>
         <div class="section" id="arid">
             <a href="Arid2024/index.html">Árið 2024 í myndasögum</a>
