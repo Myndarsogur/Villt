@@ -27,7 +27,7 @@
             padding: 20px;
             border: 3px solid #fff;
             margin: 20px;
-            animation: expand 2s ease-in-out;
+            animation: expand 60s ease-in-out; /* Slower animation */
         }
         .section:nth-child(odd) {
             background-color: #111;
@@ -38,9 +38,11 @@
         @keyframes expand {
             from {
                 transform: scale(0.9);
+                opacity: 0.7; /* Remove gray overlay */
             }
             to {
                 transform: scale(1);
+                opacity: 1; /* Ensure full visibility */
             }
         }
         a {
@@ -75,6 +77,15 @@
             background: linear-gradient(to bottom, #fff 50%, #00f 50%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            animation: color-shift 5s infinite alternate; /* Letter movement */
+        }
+        @keyframes color-shift {
+            0% {
+                letter-spacing: 2px;
+            }
+            100% {
+                letter-spacing: 5px;
+            }
         }
         #arid {
             font-family: Impact, sans-serif;
