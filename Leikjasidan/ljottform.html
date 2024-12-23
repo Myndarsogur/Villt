@@ -44,22 +44,26 @@
             cursor: pointer;
         }
         .front  { transform: rotateY(0deg) translateZ(75px); background: #ffd5d5; }
-        .front svg {
-            width: 100px;
-            height: 100px;
+        .front::before {
+            content: "🟪";
+            position: absolute;
+            bottom: 25%;
+            color: #6b3fa0;
+            font-size: 80px;
         }
-        .front svg .shape1 {
-            fill: #ff5733;
-            transform: translate(25px, 0);
+        .front::after {
+            content: "🔺";
+            position: absolute;
+            top: 25%;
+            color: #d91e18;
+            font-size: 80px;
         }
-        .front svg .shape2 {
-            fill: #ffc300;
-            transform: rotate(45deg) translate(10px, -10px);
+        .front span {
+            position: absolute;
+            color: #fcd116;
+            font-size: 80px;
         }
-        .front svg .shape3 {
-            fill: #daf7a6;
-            transform: rotate(-30deg) translate(-20px, 15px);
-        }
+
         .back   { transform: rotateY(180deg) translateZ(75px); background: #d5eaff; }
         .left   { transform: rotateY(-90deg) translateZ(75px); background: #d5ffd5; }
         .right  { transform: rotateY(90deg) translateZ(75px); background: #ffe5d5; }
@@ -71,13 +75,7 @@
 
 <div class="scene">
     <div class="cube" id="cube">
-        <div class="cube-face front" onclick="location.href='Formleikurinn/index.html'">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                <circle class="shape1" cx="50" cy="50" r="20" />
-                <rect class="shape2" x="30" y="30" width="40" height="40" />
-                <polygon class="shape3" points="50,10 70,80 30,80" />
-            </svg>
-        </div>
+        <div class="cube-face front" onclick="location.href='Formleikurinn/index.html'"><span>🟡</span></div>
         <div class="cube-face back" onclick="location.href='Skograekt\ simulator/index.html'">🌲</div>
         <div class="cube-face left" onclick="location.href='Teiknileikurinn/index.html'">🎨</div>
         <div class="cube-face right" onclick="location.href='#'">❔</div>
