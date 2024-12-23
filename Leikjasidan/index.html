@@ -1,181 +1,101 @@
 <!DOCTYPE html>
-<html lang="is">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leikjasíðan</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Box Game</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
-        }
-
-        canvas {
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             height: 100vh;
         }
+        .box {
+            width: 150px;
+            height: 150px;
+            margin: 10px;
+            position: absolute;
+            transform-style: preserve-3d;
+            transform: rotateX(30deg) rotateY(30deg);
+            transition: transform 0.2s;
+        }
+        .box .front, .box .back, .box .left, .box .right, .box .top, .box .bottom {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: #fff;
+            border: 2px solid #ddd;
+        }
+        .front  { transform: translateZ(75px); background: #ff9999; }
+        .back   { transform: rotateY(180deg) translateZ(75px); background: #99ccff; }
+        .left   { transform: rotateY(-90deg) translateZ(75px); background: #99ff99; }
+        .right  { transform: rotateY(90deg) translateZ(75px); background: #ffcc99; }
+        .top    { transform: rotateX(90deg) translateZ(75px); background: #cc99ff; }
+        .bottom { transform: rotateX(-90deg) translateZ(75px); background: #ffff99; }
+        
+        svg {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            top: 25%;
+            left: 25%;
+        }
+
+        #box1 .front svg { fill: green; }
+        #box2 .front svg { fill: red; }
+        #box3 .front svg { fill: blue; }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
 
-    <script>
-        const games = [
-            { name: "Formleikurinn", color: "#FF6F61", link: "./Formleikurinn/index.html" },
-            { name: "Skógrækt Simulator", color: "#6B5B95", link: "./Skograekt%20simulator/index.html" },
-            { name: "Teiknileikurinn", color: "#88B04B", link: "./Teiknileikurinn/index.html" }
-        ];
+<div id="box1" class="box">
+    <div class="front">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M12 2C7.589 2 4 6.127 4 9c0 3.528 2.5 6 6 6h4c3.5 0 6-2.472 6-6 0-2.873-3.589-7-8-7z"/>
+        </svg>
+    </div>
+    <div class="back"></div>
+    <div class="left"></div>
+    <div class="right"></div>
+    <div class="top"></div>
+    <div class="bottom"></div>
+</div>
 
-        const tiles = [];
-        const gravity = 2;
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+<script>
+    let boxes = document.querySelectorAll('.box');
+    let shakeThreshold = 15;
 
-        class Tile {
-            constructor(x, y, game) {
-                this.x = x;
-                this.y = y;
-                this.width = 120;
-                this.height = 120;
-                this.color = game.color;
-                this.text = game.name;
-                this.link = game.link;
-                this.vx = 0;
-                this.vy = 0;
-                this.isDragging = false;
-            }
+    if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', (event) => {
+            let beta = event.beta; // X-axis
+            let gamma = event.gamma; // Y-axis
 
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                ctx.fillStyle = "white";
-                ctx.font = "bold 16px Arial";
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
+            boxes.forEach(box => {
+                box.style.transform = `rotateX(${beta}deg) rotateY(${gamma}deg)`;
+            });
+        });
+    }
 
-                const words = this.text.split(" ");
-                const lines = [];
-                let currentLine = words[0];
+    if (window.DeviceMotionEvent) {
+        window.addEventListener('devicemotion', (event) => {
+            let x = event.acceleration.x;
+            let y = event.acceleration.y;
+            let z = event.acceleration.z;
 
-                for (let i = 1; i < words.length; i++) {
-                    if (ctx.measureText(`${currentLine} ${words[i]}`).width < this.width - 10) {
-                        currentLine += ` ${words[i]}`;
-                    } else {
-                        lines.push(currentLine);
-                        currentLine = words[i];
-                    }
-                }
-                lines.push(currentLine);
-
-                const lineHeight = 16;
-                const startY = this.y + (this.height - lines.length * lineHeight) / 2;
-
-                lines.forEach((line, index) => {
-                    ctx.fillText(line, this.x + this.width / 2, startY + index * lineHeight);
+            if (Math.abs(x) > shakeThreshold || Math.abs(y) > shakeThreshold || Math.abs(z) > shakeThreshold) {
+                boxes.forEach(box => {
+                    box.style.transform = `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px)`;
                 });
             }
-
-            update() {
-                if (!this.isDragging) {
-                    this.vy += gravity;
-                    this.y += this.vy;
-                    if (this.y + this.height > canvas.height) {
-                        this.y = canvas.height - this.height;
-                        this.vy = 0;
-                    }
-
-                    for (const other of tiles) {
-                        if (other !== this && this.isColliding(other)) {
-                            this.y = other.y - this.height;
-                            this.vy = 0;
-                            break;
-                        }
-                    }
-                }
-                this.draw();
-            }
-
-            isColliding(other) {
-                return (
-                    this.x < other.x + other.width &&
-                    this.x + this.width > other.x &&
-                    this.y + this.height > other.y &&
-                    this.y < other.y + other.height
-                );
-            }
-
-            isClicked(x, y) {
-                return x > this.x && x < this.x + this.width && y > this.y && y < this.y + this.height;
-            }
-        }
-
-        // Populate tiles
-        for (let i = 0; i < 15; i++) {
-            const game = games[i % games.length];
-            const x = Math.random() * (canvas.width - 120);
-            const y = Math.random() * (canvas.height - 300);
-            tiles.push(new Tile(x, y, game));
-        }
-
-        let draggedTile = null;
-        canvas.addEventListener("mousedown", (e) => {
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
-
-            for (const tile of tiles) {
-                if (tile.isClicked(mouseX, mouseY)) {
-                    draggedTile = tile;
-                    tile.isDragging = true;
-                    tile.vy = 0;
-                    tile.vx = 0;
-                    break;
-                }
-            }
         });
+    }
+</script>
 
-        canvas.addEventListener("mousemove", (e) => {
-            if (draggedTile) {
-                draggedTile.x = e.clientX - draggedTile.width / 2;
-                draggedTile.y = e.clientY - draggedTile.height / 2;
-            }
-        });
-
-        canvas.addEventListener("mouseup", () => {
-            if (draggedTile) {
-                draggedTile.isDragging = false;
-                draggedTile = null;
-            }
-        });
-
-        canvas.addEventListener("dblclick", (e) => {
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
-
-            for (const tile of tiles) {
-                if (tile.isClicked(mouseX, mouseY)) {
-                    window.location.href = tile.link;
-                    break;
-                }
-            }
-        });
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (const tile of tiles) {
-                tile.update();
-            }
-            requestAnimationFrame(animate);
-        }
-
-        animate();
-    </script>
 </body>
 </html>
