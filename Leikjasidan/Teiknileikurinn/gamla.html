@@ -52,7 +52,7 @@
         }
 
         .brush[data-size="5"]::after {
-            content: " 🐭";
+            content: " 🐁";
         }
 
         .brush[data-size="15"]::after {
@@ -180,43 +180,6 @@
                 ctx.fill();
             } else if (brushType === 'square') {
                 ctx.fillRect(e.clientX - brushSize / 2, e.clientY - brushSize / 2, brushSize, brushSize);
-            }
-        });
-
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            drawing = true;
-            const touch = e.touches[0];
-            startX = touch.clientX;
-            startY = touch.clientY;
-        });
-
-        canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            if (brushType === 'line' && drawing) {
-                const touch = e.changedTouches[0];
-                ctx.strokeStyle = brushColor;
-                ctx.lineWidth = brushSize;
-                ctx.beginPath();
-                ctx.moveTo(startX, startY);
-                ctx.lineTo(touch.clientX, touch.clientY);
-                ctx.stroke();
-            }
-            drawing = false;
-        });
-
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            if (!drawing || brushType === 'line') return;
-
-            const touch = e.touches[0];
-            ctx.fillStyle = brushColor;
-            if (brushType === 'circle') {
-                ctx.beginPath();
-                ctx.arc(touch.clientX, touch.clientY, brushSize, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (brushType === 'square') {
-                ctx.fillRect(touch.clientX - brushSize / 2, touch.clientY - brushSize / 2, brushSize, brushSize);
             }
         });
 
