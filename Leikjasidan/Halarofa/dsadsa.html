@@ -43,9 +43,6 @@
             speed: 4
         };
 
-        let touchStartX = 0;
-        let touchStartY = 0;
-
         function createElement() {
             return {
                 x: Math.random() * canvas.width,
@@ -193,7 +190,6 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Keyboard controls for desktop
         window.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowUp') player.dy = -player.speed;
             if (e.key === 'ArrowDown') player.dy = player.speed;
@@ -204,30 +200,6 @@
         window.addEventListener('keyup', (e) => {
             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') player.dy = 0;
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
-        });
-
-        // Touch controls for mobile
-        canvas.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-        });
-
-        canvas.addEventListener('touchmove', (e) => {
-            const touch = e.touches[0];
-            const deltaX = touch.clientX - touchStartX;
-            const deltaY = touch.clientY - touchStartY;
-
-            player.dx = deltaX * 0.05;
-            player.dy = deltaY * 0.05;
-
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-        });
-
-        canvas.addEventListener('touchend', () => {
-            player.dx = 0;
-            player.dy = 0;
         });
 
         initElements(100);
