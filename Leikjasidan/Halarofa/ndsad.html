@@ -43,8 +43,8 @@
             speed: 4
         };
 
-        let touchTargetX = player.x;
-        let touchTargetY = player.y;
+        let touchStartX = 0;
+        let touchStartY = 0;
 
         function createElement() {
             return {
@@ -170,14 +170,13 @@
         }
 
         function updatePlayer() {
-            const dx = touchTargetX - player.x;
-            const dy = touchTargetY - player.y;
-            const dist = Math.hypot(dx, dy);
+            player.x += player.dx;
+            player.y += player.dy;
 
-            if (dist > 1) {
-                player.x += (dx / dist) * player.speed;
-                player.y += (dy / dist) * player.speed;
-            }
+            if (player.x < 0) player.x = canvas.width;
+            if (player.x > canvas.width) player.x = 0;
+            if (player.y < 0) player.y = canvas.height;
+            if (player.y > canvas.height) player.y = 0;
         }
 
         function drawScene() {
@@ -194,17 +193,41 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // Keyboard controls for desktop
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') player.dy = -player.speed;
+            if (e.key === 'ArrowDown') player.dy = player.speed;
+            if (e.key === 'ArrowLeft') player.dx = -player.speed;
+            if (e.key === 'ArrowRight') player.dx = player.speed;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') player.dy = 0;
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
+        });
+
         // Touch controls for mobile
         canvas.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
-            touchTargetX = touch.clientX;
-            touchTargetY = touch.clientY;
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
         });
 
         canvas.addEventListener('touchmove', (e) => {
             const touch = e.touches[0];
-            touchTargetX = touch.clientX;
-            touchTargetY = touch.clientY;
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - touchStartY;
+
+            player.dx = deltaX * 0.05;
+            player.dy = deltaY * 0.05;
+
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+        });
+
+        canvas.addEventListener('touchend', () => {
+            player.dx = 0;
+            player.dy = 0;
         });
 
         initElements(100);
