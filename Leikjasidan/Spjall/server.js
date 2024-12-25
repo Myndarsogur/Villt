@@ -7,7 +7,13 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+      origin: "https://villt.is", // Uppruni lénsins
+      methods: ["GET", "POST"],   // Aðferðir sem leyfðar eru
+  }
+});
+
 
 // MongoDB connection using MongoClient
 const uri = "mongodb+srv://myndarsogur:KSNzT5466142ZLg9@koster.ow6d1.mongodb.net/?retryWrites=true&w=majority&appName=Koster";

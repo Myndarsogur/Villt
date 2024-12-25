@@ -184,7 +184,7 @@
 
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script>
-        const socket = io();
+        const socket = io("https://myndarsogur.onrender.com");
 
         // Display chat history
         socket.on('chat history', (messages) => {
