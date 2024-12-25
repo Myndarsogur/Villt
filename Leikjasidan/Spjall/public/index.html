@@ -182,7 +182,7 @@
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script>
         const socket = io();
 
@@ -241,27 +241,11 @@
             const message = document.createElement('div');
             message.className = 'message';
 
-            // Check if the message contains an Imgur link
-            const imgurRegex = /(https?:\/\/i\.imgur\.com\/\S+\.(?:jpg|jpeg|png|gif))/i;
-            const imgurMatch = msg.text.match(imgurRegex);
-
-            if (imgurMatch) {
-                // If it's an Imgur link, display the image
-                message.innerHTML = `
-                    <div class="meta">${msg.user} @ ${msg.timestamp}</div>
-                    <div><img src="${imgurMatch[0]}" alt="Imgur Image" class="chat-image"></div>
-                `;
-            } else {
-                // Otherwise, display as plain text
-                message.innerHTML = `
-                    <div class="meta">${msg.user} @ ${msg.timestamp}</div>
-                    <div>${msg.emoji} ${msg.text}</div>
-                `;
-            }
 
             timeline.appendChild(message);
             timeline.scrollTop = timeline.scrollHeight;
         }
+        
     </script>
 </body>
 </html>
