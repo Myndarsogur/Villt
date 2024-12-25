@@ -1,36 +1,50 @@
+// Import dependencies
 const express = require('express');
-const mongoose = require('mongoose');
-const { Server } = require('socket.io');
 const http = require('http');
-const cors = require('cors');
-const path = require('path');
+const { Server } = require('socket.io');
+const mongoose = require('mongoose');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 
-// Environment Variables (make sure these are set on Render or in your local .env file)
-const PORT = process.env.PORT || 3000;
-const MONGO_URI = "mongodb+srv://myndarsogur:KSNzT5466142ZLg9@koster.ow6d1.mongodb.net/?retryWrites=true&w=majority&appName=Koster";
-
-// App and Server setup
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: "*", // Change this to your GitHub Pages URL if needed
-        methods: ["GET", "POST"]
-    }
+  cors: {
+      origin: "https://villt.is", // Uppruni lénsins
+      methods: ["GET", "POST"],   // Aðferðir sem leyfðar eru
+  }
 });
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the 'public' folder
 
-// MongoDB Connection
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((err) => console.error('MongoDB connection error:', err));
+// MongoDB connection using MongoClient
+
+const uri = "mongodb+srv://myndarsogur:KSNzT5466142ZLg9@koster.ow6d1.mongodb.net/?retryWrites=true&w=majority&appName=Koster";
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
+
+async function run() {
+  try {
+    // Connect the client to the server	(optional starting in v4.7)
+    await client.connect();
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    await client.close();
+  }
+}
+run().catch(console.dir);
 
 
-// Message Schema and Model
+
+// Define message schema
 const MessageSchema = new mongoose.Schema({
     user: String,
     text: String,
@@ -39,44 +53,33 @@ const MessageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model('Message', MessageSchema);
 
-// WebSocket Connection
+// Serve static files
+app.use(express.static('public'));
+
+// WebSocket connection
 io.on('connection', (socket) => {
     console.log('A user connected');
 
-    // Send chat history to the connected user
+    // Send chat history
     Message.find().then(messages => {
         socket.emit('chat history', messages);
     });
 
-    // Handle receiving a new message
+    // Handle new messages
     socket.on('send message', (data) => {
         const message = new Message(data);
         message.save().then(() => {
-            io.emit('new message', data); // Broadcast the new message to all connected clients
+            io.emit('new message', data);
         });
     });
 
-    // Handle user typing
-    socket.on('user typing', (username) => {
-        socket.broadcast.emit('user typing', username);
-    });
-
-    socket.on('stop typing', () => {
-        socket.broadcast.emit('stop typing');
-    });
-
-    // Handle user disconnect
     socket.on('disconnect', () => {
         console.log('A user disconnected');
     });
 });
 
-// Serve fallback for React/Angular Single-Page Apps (optional)
-app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
-});
-
-// Start Server
+// Start the server
+const PORT = 3000;
 server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
