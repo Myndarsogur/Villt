@@ -25,9 +25,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the 'public' folder
 
 // MongoDB Connection
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(MONGO_URI)
     .then(() => console.log('Connected to MongoDB'))
     .catch((err) => console.error('MongoDB connection error:', err));
+
 
 // Message Schema and Model
 const MessageSchema = new mongoose.Schema({
