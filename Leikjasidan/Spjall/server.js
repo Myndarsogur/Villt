@@ -44,10 +44,6 @@ async function run() {
 run().catch(console.dir);
 
 
-// Connect to MongoDB using Mongoose
-mongoose.connect('mongodb+srv://myndarsogur:KSNzT5466142ZLg9@koster.ow6d1.mongodb.net/chat?retryWrites=true&w=majority&appName=Koster')
-    .then(() => console.log('Connected to MongoDB using Mongoose'))
-    .catch(err => console.error('MongoDB connection error:', err));
 
 // Define message schema
 const MessageSchema = new mongoose.Schema({
