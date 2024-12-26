@@ -1,0 +1,11 @@
+# Hunsa node_modules
+node_modules/
+
+# Hunsa .env skrá (með viðkvæmar upplýsingar)
+.env
+
+# Hunsa tímabundnar skrár
+*.log
+.DS_Store
+
+
