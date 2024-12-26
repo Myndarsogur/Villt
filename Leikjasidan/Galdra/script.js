@@ -32,17 +32,10 @@ styles.innerHTML = `
 `;
 document.head.appendChild(styles);
 
-// Smelltu á stjörnumerki til að birta texta í miðjunni og færa það
+// Smelltu á stjörnumerki til að birta texta í miðjunni
 symbols.forEach(symbol => {
     symbol.addEventListener('click', () => {
         const text = symbol.getAttribute('data-text');
         centerText.textContent = text;
-
-        // Færa textann þannig að það forðast stjörnumerkin
-        const angle = parseFloat(symbol.style.getPropertyValue('--angle'));
-        const offsetX = 150 * Math.cos((angle - 90) * Math.PI / 180); // Færsla miðað við snúning
-        const offsetY = 150 * Math.sin((angle - 90) * Math.PI / 180);
-
-        centerText.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
     });
 });
