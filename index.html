@@ -135,7 +135,9 @@
         // Hávaði með hljóði
         window.onload = function() {
             const audio = new Audio('hljod.m4a');
-            audio.play();
+            audio.play().catch(error => {
+                console.error('Failed to play audio:', error);
+            });
         };
     </script>
 
