@@ -25,6 +25,11 @@
       z-index: 1;
       background-size: cover;
       background-position: center;
+      transition: opacity 1s ease-in-out; /* Fade effect */
+      opacity: 1; /* Start hidden */
+    }
+    #background.loaded {
+      opacity: 1; /* Show when loaded */
     }
     #floating-frame {
       position: absolute;
@@ -145,8 +150,19 @@
     const totalBackgrounds = 75; // Assume Bakgrunnsmyndir group has 75 images
     let currentBackground = 1;
 
+    function preloadImage(src, callback) {
+      const img = new Image();
+      img.onload = callback;
+      img.src = src;
+    }
+
     function updateBackground() {
-      background.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentBackground}.jpeg')`;
+      const nextBackgroundSrc = `Bakgrunnsmyndir/mynd${currentBackground}.jpeg`;
+      preloadImage(nextBackgroundSrc, () => {
+        background.style.backgroundImage = `url('${nextBackgroundSrc}')`;
+        background.classList.add('loaded'); // Apply fade-in effect
+      });
+      background.classList.remove('loaded'); // Prepare for next fade
       currentBackground = currentBackground < totalBackgrounds ? currentBackground + 1 : 1;
     }
 
