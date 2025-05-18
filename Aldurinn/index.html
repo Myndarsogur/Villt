@@ -146,7 +146,7 @@
     let currentBackground = 1;
 
     function updateBackground() {
-      background.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentBackground}.JPG')`;
+      background.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentBackground}.jpeg')`;
       currentBackground = currentBackground < totalBackgrounds ? currentBackground + 1 : 1;
     }
 
@@ -159,7 +159,7 @@
     let currentFloatingImage = 1;
 
     function updateFloatingFrame() {
-      floatingFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFloatingImage}.JPG')`;
+      floatingFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFloatingImage}.jpeg')`;
       currentFloatingImage = currentFloatingImage < totalBackgrounds ? currentFloatingImage + 1 : 1;
 
       // Randomize position
@@ -177,7 +177,7 @@
     let currentFixedImage = 1;
 
     function updateFixedFrame() {
-      fixedFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFixedImage}.JPG')`;
+      fixedFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFixedImage}.jpeg')`;
       currentFixedImage = currentFixedImage < totalBackgrounds ? currentFixedImage + 1 : 1;
     }
 
