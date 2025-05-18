@@ -105,7 +105,7 @@
     let currentGroup = null;
 
     function updateImage() {
-      image.src = `Adal/mynd${currentImage}.png`;
+      image.src = `Adal/mynd${currentImage}.PNG`;
       updateAudio();
     }
 
@@ -146,7 +146,7 @@
     let currentBackground = 1;
 
     function updateBackground() {
-      background.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentBackground}.jpg')`;
+      background.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentBackground}.JPG')`;
       currentBackground = currentBackground < totalBackgrounds ? currentBackground + 1 : 1;
     }
 
@@ -159,7 +159,7 @@
     let currentFloatingImage = 1;
 
     function updateFloatingFrame() {
-      floatingFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFloatingImage}.jpg')`;
+      floatingFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFloatingImage}.JPG')`;
       currentFloatingImage = currentFloatingImage < totalBackgrounds ? currentFloatingImage + 1 : 1;
 
       // Randomize position
@@ -177,7 +177,7 @@
     let currentFixedImage = 1;
 
     function updateFixedFrame() {
-      fixedFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFixedImage}.jpg')`;
+      fixedFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFixedImage}.JPG')`;
       currentFixedImage = currentFixedImage < totalBackgrounds ? currentFixedImage + 1 : 1;
     }
 
