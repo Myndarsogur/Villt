@@ -134,9 +134,9 @@
 
     // Add keyboard navigation
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'ArrowRight') {
+      if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'Enter') {
         nextImage();
-      } else if (event.key === 'ArrowLeft') {
+      } else if (event.key === 'ArrowLeft' || event.key === 'Backspace') {
         previousImage();
       }
     });
