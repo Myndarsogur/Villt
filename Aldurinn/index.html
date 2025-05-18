@@ -189,6 +189,13 @@
 
     // Byrja með fyrstu mynd og lag
     updateImage();
+
+    // Add user interaction to start audio
+    document.addEventListener('click', () => {
+      if (player.tagName === 'AUDIO') {
+        player.play();
+      }
+    }, { once: true }); // Ensure this runs only once
   </script>
 
 </body>
