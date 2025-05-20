@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lag og Texti</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      font-size: 2rem;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+      user-select: none;
+      position: relative;
+    }
+
+    #text-display {
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1.2;
+      max-width: 80%;
+      word-wrap: break-word;
+      padding: 10px 10px;
+      box-sizing: border-box;
+      z-index: 1;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 15%; /* Hæð pseudo-elementið */
+      background-image: url('matarbod.jpg');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      z-index: 0; /* Venjulegt ástand */
+      opacity: 0.8;
+      transition: all 0.3s ease;
+      pointer-events: auto; /* Leyfir smelli á pseudo-element */
+    }
+
+    body.fullscreen::before {
+      position: fixed; /* Tryggir að myndin fylli skjáinn og fer yfir allt */
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%; /* Myndin fyllir skjáinn */
+      background-size: cover; /* Myndin fyllir svæðið */
+      z-index: 9999; /* Setur pseudo-elementið efst í lagaskiptingunni */
+      opacity: 1; /* Myndin verður ógegnsæ */
+    }
+  </style>
+</head>
+<body>
+  <div id="text-display">Matarboð fyrir mömmu</div>
+
+  <script>
+    const audioFolder = "converted";
+    const totalSongs = 104;
+    let songs = Array.from({ length: totalSongs }, (_, i) => `${audioFolder}/song${i + 1}.mp3`);
+    let texts = Array.from({ length: totalSongs }, (_, i) => `Texti fyrir lag ${i + 1}`);
+    const textDisplay = document.getElementById("text-display");
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let audioBuffer = null;
+    let sourceNode = null;
+    let currentSongIndex = 0;
+    let started = false;
+
+    function loadAndPlaySong(index) {
+      const songUrl = songs[index];
+      console.log("Hleð lag:", songUrl);
+      fetch(songUrl)
+        .then(response => {
+          if (!response.ok) throw new Error(`Gat ekki sótt ${songUrl}`);
+          return response.arrayBuffer();
+        })
+        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+        .then(buffer => {
+          audioBuffer = buffer;
+          playAudioBuffer();
+          textDisplay.textContent = texts[index] || "Enginn texti";
+        })
+        .catch(err => {
+          console.error("Gat ekki hlaðið lag:", err);
+          textDisplay.textContent = "Villa við spilun";
+        });
+    }
+
+    function playAudioBuffer() {
+      if (!audioBuffer) return;
+      if (sourceNode) sourceNode.stop();
+      sourceNode = audioContext.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+      sourceNode.loop = true;
+      sourceNode.connect(audioContext.destination);
+      sourceNode.start(0);
+    }
+
+    function nextSong() {
+      currentSongIndex = (currentSongIndex + 1) % totalSongs;
+      loadAndPlaySong(currentSongIndex);
+      textDisplay.textContent = texts[currentSongIndex] || "Enginn texti";
+    }
+
+    function previousSong() {
+      currentSongIndex = (currentSongIndex - 1 + totalSongs) % totalSongs;
+      loadAndPlaySong(currentSongIndex);
+      textDisplay.textContent = texts[currentSongIndex] || "Enginn texti";
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function initializeSongsAndTexts() {
+      const combined = songs.map((song, index) => ({ song, text: texts[index] }));
+      shuffleArray(combined);
+      songs = combined.map(item => item.song);
+      texts = combined.map(item => item.text);
+    }
+
+    function startPlayback() {
+      if (started) return;
+      started = true;
+
+      audioContext.resume().then(() => {
+        fetch("kannski.htm")
+          .then(res => res.ok ? res.text() : Promise.reject("fann ekki kannski.htm"))
+          .then(txt => {
+            const lines = txt.split("\n").map(l => l.trim()).filter(l => l);
+            if (lines.length > 0) texts = lines;
+          })
+          .catch(err => {
+            console.log("Nota sjálfgefin texta:", err);
+          })
+          .finally(() => {
+            initializeSongsAndTexts();
+            loadAndPlaySong(currentSongIndex);
+          });
+      });
+    }
+
+    // Byrja eða skipta um lag við smell
+    document.body.addEventListener("click", (e) => {
+      if (!started) {
+        startPlayback();
+      } else {
+        nextSong();
+      }
+      document.body.classList.toggle("fullscreen"); // Skiptir á milli fullscreen og venjulegs ástands
+
+      // Athugar hvort smellt var á pseudo-elementið með því að nota staðsetningu smelli
+      const rect = document.body.getBoundingClientRect();
+      const clickY = e.clientY;
+      if (clickY <= rect.top + (window.innerHeight * 0.15)) {
+        // Ef smellt er innan hæð pseudo-elementið (15% efst)
+        document.body.classList.toggle("fullscreen");
+      }
+    });
+
+    // Sveifla til vinstri eða hægri
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.body.addEventListener("touchstart", (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+
+    document.body.addEventListener("touchend", (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      if (touchEndX < touchStartX - 50) {
+        nextSong(); // Svæp til hægri -> næsta lag
+      } else if (touchEndX > touchStartX + 50) {
+        previousSong(); // Svæp til vinstri -> fyrra lag
+      }
+    });
+
+    // Örvatakkar til að skipta um lög
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") {
+        nextSong(); // Hægri ör -> næsta lag
+      } else if (e.key === "ArrowLeft") {
+        previousSong(); // Vinstri ör -> fyrra lag
+      }
+    });
+
+    document.body.addEventListener("click", (e) => {
+      const rect = document.body.getBoundingClientRect();
+      const clickY = e.clientY;
+
+      if (!document.body.classList.contains("fullscreen")) {
+        // Ef smellt er á smámyndina (innan efstu 15% af skjánum)
+        if (clickY <= rect.top + (window.innerHeight * 0.15)) {
+          document.body.classList.add("fullscreen");
+        }
+      } else {
+        // Ef smellt er á stóru myndina (fullscreen ástand)
+        document.body.classList.remove("fullscreen");
+      }
+    });
+  </script>
+</body>
+</html>
