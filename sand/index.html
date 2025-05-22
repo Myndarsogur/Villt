@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 
-<html lang="en-US">
+<html lang="is-ICE">
 
 <head>
   <link rel="stylesheet" type="text/css" href="styles.css" media="screen" />
   <title>Project Sand</title>
-  <meta name="keywords" content="sand, falling, game" />
-  <meta name="description" content="Project Sand: A modern version of the classic Hell of Sand Falling Game" />
-  <meta name="subject" content="Project Sand" />
+  <meta name="keywords" content="sandur, að falla, leikur" />
+  <meta name="description" content="Sandverkefnið: Nútímaútgáfa af klassíska leiknum" />
+  <meta name="subject" content="Sandur" />
   <meta charset="UTF-8">
   <meta name="google" content="notranslate">
   <link rel="icon" href="assets/favicon.ico" type="image/x-icon" />
@@ -16,27 +16,27 @@
 
 <div class="wrapper" id="gameWrapper">
   <div id="titleWrapper">
-    <h1 class="title">Project Sand</h1>
+    <h1 class="title">Sandur</h1>
     <div class="subheader">
       <div class="column-left">
-        <a href="https://github.com/joshdon/ProjectSand" target="_blank">Source Code</a>
+        <a href="https://github.com/joshdon/ProjectSand" target="_blank"></a>
       </div>
       <div class="column-center">
-        By: Josh Don
+        
       </div>
       <div class="column-right">
-        <a href="http://androdome.com/Sand/" target="_blank">Original Applets</a>
+        <a href="http://androdome.com/Sand/" target="_blank"></a>
       </div>
     </div>
   </div>
 
-  <canvas id="mainCanvas">Your browser doesn't support HTML5 canvas.</canvas>
+  <canvas id="mainCanvas">Vafrinn þinn styður ekki html canvas.</canvas>
   <div id="menuWrapper">
     <table id="elementTable">
     </table>
     <div id="optionsCol1" class="optionsCol">
       <div id="penSizeDiv">
-        <label for="pensize">Pen Size</label>
+        <label for="pensize">Stærð</label>
         <select id="pensize"></select>
       </div>
       <div>
@@ -58,24 +58,24 @@
     </div>
     <div id="optionsCol2" class="optionsCol">
       <div>
-        <label for="overwriteCheckbox">Overwrite</label>
+        <label for="overwriteCheckbox">Teikna yfir</label>
         <input type="checkbox" id="overwriteCheckbox">
       </div>
       <div id="speedSliderDiv">
-        <label for="speedSlider">Speed</label>
+        <label for="speedSlider">Hraði</label>
         <input type="range" id="speedSlider">
       </div>
       <div id="zombieSliderDiv">
-        <label for="zombieSlider">Zombies</label>
+        <label for="zombieSlider">Uppvakningar</label>
         <input type="range" id="zombieSlider">
         <span id="zombieCount">0</span>
       </div>
       <div class="optionButtonContainer">
-        <input id="saveButton" class="optionButton" type="button" value="Save">
-        <input id="loadButton" class="optionButton" type="button" value="Load">
+        <input id="saveButton" class="optionButton" type="button" value="Vista">
+        <input id="loadButton" class="optionButton" type="button" value="Hlaða">
       </div>
       <div id="clearButtonDiv" class="optionButtonContainer">
-        <input id="clearButton" class="optionButton" type="button" value="Clear">
+        <input id="clearButton" class="optionButton" type="button" value="Hreinsa">
       </div>
     </div>
     <div id="fps-counter">

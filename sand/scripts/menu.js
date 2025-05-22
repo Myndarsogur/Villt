@@ -36,33 +36,33 @@ const elementMenuItems = [
 ];
 
 const menuNames = {};
-menuNames[WALL] = "WALL";
-menuNames[SAND] = "SAND";
-menuNames[WATER] = "WATER";
-menuNames[PLANT] = "PLANT";
-menuNames[FIRE] = "FIRE";
+menuNames[WALL] = "VEGGUR";
+menuNames[SAND] = "SANDUR";
+menuNames[WATER] = "VATN";
+menuNames[PLANT] = "PLANTA";
+menuNames[FIRE] = "ELDUR";
 menuNames[SALT] = "SALT";
-menuNames[OIL] = "OIL";
-menuNames[SPOUT] = "SPOUT";
-menuNames[WELL] = "WELL";
-menuNames[TORCH] = "TORCH";
-menuNames[GUNPOWDER] = "GUNPOWDER";
-menuNames[WAX] = "WAX";
+menuNames[OIL] = "OLÍA";
+menuNames[SPOUT] = "STÚTUR";
+menuNames[WELL] = "BRUNNUR";
+menuNames[TORCH] = "KYNDILL";
+menuNames[GUNPOWDER] = "BYSSUPÚÐUR";
+menuNames[WAX] = "VAX";
 menuNames[NITRO] = "NITRO";
 menuNames[NAPALM] = "NAPALM";
 menuNames[C4] = "C-4";
-menuNames[CONCRETE] = "CONCRETE";
-menuNames[BACKGROUND] = "ERASER";
-menuNames[FUSE] = "FUSE";
-menuNames[ICE] = "ICE";
-menuNames[LAVA] = "LAVA";
-menuNames[METHANE] = "METHANE";
-menuNames[CRYO] = "CRYO";
+menuNames[CONCRETE] = "STEYPA";
+menuNames[BACKGROUND] = "STROKLEÐUR";
+menuNames[FUSE] = "KVEIKUR";
+menuNames[ICE] = "ÍS";
+menuNames[LAVA] = "HRAUN";
+menuNames[METHANE] = "METAN";
+menuNames[CRYO] = "FROST";
 menuNames[MYSTERY] = "???";
-menuNames[SOIL] = "SOIL";
-menuNames[ACID] = "ACID";
-menuNames[THERMITE] = "THERMITE";
-menuNames[ZOMBIE] = "HAND";
+menuNames[SOIL] = "MOLD";
+menuNames[ACID] = "SÝRA";
+menuNames[THERMITE] = "ÞERMÍT";
+menuNames[ZOMBIE] = "HENDI";
 
 /*
  * Some element colors do not have very good contrast against
