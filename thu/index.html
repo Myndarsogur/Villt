@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8">
+  <title>Myndir og Tónlist</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    #background {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      z-index: 0;
+    }
+
+    #preview {
+      position: fixed;
+      width: 300px;
+      height: 200px;
+      bottom: 150px;
+      right: 200px;
+      z-index: 1;
+      background-size: cover;
+      background-position: center;
+      border: 2px solid white;
+    }
+
+    #leftClickArea, #rightClickArea {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 50%;
+      z-index: 2;
+    }
+
+    #leftClickArea { left: 0; }
+    #rightClickArea { right: 0; }
+  </style>
+</head>
+<body>
+  <div id="background"></div>
+  <div id="preview"></div>
+  <div id="leftClickArea"></div>
+  <div id="rightClickArea"></div>
+  <audio id="music" src="thu.mp3" autoplay loop></audio>
+
+  <script>
+    const totalImages = 49;
+    const imagePaths = Array.from({ length: totalImages }, (_, i) => `thu2/mynd${i + 1}.gif`);
+
+    // --- Bakgrunnur ---
+    const background = document.getElementById('background');
+    let currentBgIndex = 0;
+
+    background.style.backgroundImage = `url(${imagePaths[currentBgIndex]})`;
+
+    setInterval(() => {
+      currentBgIndex = (currentBgIndex + 1) % totalImages;
+      background.style.backgroundImage = `url(${imagePaths[currentBgIndex]})`;
+    }, 5000);
+
+    // --- Preview ---
+    const preview = document.getElementById('preview');
+    const visited = [];
+    let historyIndex = -1;
+
+    function showPreviewImage(index) {
+      preview.style.backgroundImage = `url(${imagePaths[index]})`;
+    }
+
+    function goForward() {
+      if (historyIndex < visited.length - 1) {
+        historyIndex++;
+        showPreviewImage(visited[historyIndex]);
+      } else {
+        if (visited.length >= totalImages) {
+          const current = visited[historyIndex];
+          visited.length = 0;
+          visited.push(current);
+          historyIndex = 0;
+        }
+
+        let next;
+        do {
+          next = Math.floor(Math.random() * totalImages);
+        } while (visited.includes(next));
+
+        visited.push(next);
+        historyIndex++;
+        showPreviewImage(next);
+      }
+      resetInactivityTimer();
+    }
+
+    function goBack() {
+      if (historyIndex > 0) {
+        historyIndex--;
+        showPreviewImage(visited[historyIndex]);
+      }
+      resetInactivityTimer();
+    }
+
+    // --- Smellir á skjá ---
+    document.getElementById('rightClickArea').addEventListener('click', goForward);
+    document.getElementById('leftClickArea').addEventListener('click', goBack);
+
+    // --- Örvatakkar á lyklaborði ---
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') {
+        goForward();
+      } else if (e.key === 'ArrowLeft') {
+        goBack();
+      }
+    });
+
+    // --- Sjálfvirk fletting eftir 5 sekúndur ---
+    let inactivityTimer;
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        goForward();
+      }, 5000);
+    }
+
+    // Byrjar með fyrstu myndina
+    goForward();
+
+    // Spila lag við fyrsta smell notanda
+    document.addEventListener('click', () => {
+      const music = document.getElementById('music');
+      if (music.paused) {
+        music.play().catch((e) => console.log('Ekki tókst að spila lagið:', e));
+      }
+    }, { once: true });
+  </script>
+</body>
+</html>
