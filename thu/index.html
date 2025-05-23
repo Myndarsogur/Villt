@@ -29,7 +29,6 @@
       z-index: 1;
       background-size: cover;
       background-position: center;
-      border: 2px solid white;
     }
 
     #leftClickArea, #rightClickArea {
@@ -140,12 +139,20 @@ imagePaths.forEach((src) => {
     goForward();
 
     // Spila lag við fyrsta smell notanda
-    document.addEventListener('click', () => {
-      const music = document.getElementById('music');
-      if (music.paused) {
-        music.play().catch((e) => console.log('Ekki tókst að spila lagið:', e));
-      }
-    }, { once: true });
-  </script>
+    function startMusicOnce() {
+    const music = document.getElementById('music');
+    if (music.paused) {
+      music.play().catch((e) => console.log('Ekki tókst að spila lagið:', e));
+    }
+    // Fjarlægjum alla hlustara svo þetta gerist bara einu sinni
+    document.removeEventListener('click', startMusicOnce);
+    document.removeEventListener('keydown', startMusicOnce);
+    document.removeEventListener('mousedown', startMusicOnce);
+  }
+
+  document.addEventListener('click', startMusicOnce);       // músarsmellur
+  document.addEventListener('keydown', startMusicOnce);     // allir takkar (örvar, space, etc.)
+  document.addEventListener('mousedown', startMusicOnce);   // ef notandi ýtir á músartakka
+</script>
 </body>
 </html>
