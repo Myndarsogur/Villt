@@ -12,6 +12,17 @@
       background: black;
     }
 
+    .background-img {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      transition: duration 1s;
+    }
+
     #preview {
       position: fixed;
       width: 300px;
@@ -27,6 +38,7 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      transition: duration 0.5s;
     }
 
     #leftClickArea, #rightClickArea {
@@ -42,7 +54,10 @@
   </style>
 </head>
 <body>
-  <!-- Bakgrunnsmynd verður sett inn sem <img> í JS -->
+  <!-- Tveir bakgrunns-<img> sem fade-a á milli -->
+  <img id="bg1" class="background-img" src="" style="opacity: 1;">
+  <img id="bg2" class="background-img" src="" style="opacity: 0;">
+
   <div id="preview"></div>
   <div id="leftClickArea"></div>
   <div id="rightClickArea"></div>
@@ -53,44 +68,37 @@
     const imagePaths = Array.from({ length: totalImages }, (_, i) => `thu2/mynd${i + 1}.gif`);
 
     // Preload myndirnar
-    const preloadedImages = [];
-    imagePaths.forEach((src) => {
+    imagePaths.forEach(src => {
       const img = new Image();
       img.src = src;
-      preloadedImages.push(img);
     });
 
-    // Bakgrunnur
+    // Fade-bakgrunnur
+    const bg1 = document.getElementById('bg1');
+    const bg2 = document.getElementById('bg2');
+    let useBg1 = true;
     let currentBgIndex = 0;
-    let backgroundImg;
 
-    function showBackgroundImage(index) {
-      const newBg = document.createElement('img');
-      newBg.src = imagePaths[index] + '?t=' + Date.now();
-      newBg.alt = 'bakgrunnur';
-      newBg.style.position = 'fixed';
-      newBg.style.top = '0';
-      newBg.style.left = '0';
-      newBg.style.width = '100%';
-      newBg.style.height = '100%';
-      newBg.style.objectFit = 'cover';
-      newBg.style.zIndex = '0';
+    function switchBackground(index) {
+      const nextSrc = imagePaths[index] + '?t=' + Date.now();
 
-      if (backgroundImg) {
-        document.body.removeChild(backgroundImg);
+      if (useBg1) {
+        bg2.src = nextSrc;
+        bg2.style.opacity = 1;
+        bg1.style.opacity = 0;
+      } else {
+        bg1.src = nextSrc;
+        bg1.style.opacity = 1;
+        bg2.style.opacity = 0;
       }
 
-      document.body.insertBefore(newBg, document.getElementById('preview'));
-      backgroundImg = newBg;
+      useBg1 = !useBg1;
     }
 
-    // Byrja með fyrstu mynd
-    showBackgroundImage(currentBgIndex);
-
-    // Skipta á 5 sek fresti
+    switchBackground(currentBgIndex);
     setInterval(() => {
       currentBgIndex = (currentBgIndex + 1) % totalImages;
-      showBackgroundImage(currentBgIndex);
+      switchBackground(currentBgIndex);
     }, 5000);
 
     // Preview
@@ -141,11 +149,9 @@
       resetInactivityTimer();
     }
 
-    // Smellir á skjá
     document.getElementById('rightClickArea').addEventListener('click', goForward);
     document.getElementById('leftClickArea').addEventListener('click', goBack);
 
-    // Örvatakkar á lyklaborði
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') {
         goForward();
@@ -154,7 +160,6 @@
       }
     });
 
-    // Sjálfvirk fletting eftir 5 sek
     let inactivityTimer;
     function resetInactivityTimer() {
       clearTimeout(inactivityTimer);
@@ -163,10 +168,8 @@
       }, 5000);
     }
 
-    // Byrja með eina mynd í preview
     goForward();
 
-    // Spila lag við hvaða aðgerð sem er
     function startMusicOnce() {
       const music = document.getElementById('music');
       if (music.paused) {
