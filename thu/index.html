@@ -12,23 +12,13 @@
       background: black;
     }
 
-    #background-img {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      top: 0;
-      left: 0;
-      z-index: 0;
-    }
-
     #preview {
       position: fixed;
       width: 300px;
       height: 200px;
       bottom: 150px;
       right: 200px;
-      z-index: 1;
+      z-index: 2;
       background: black;
     }
 
@@ -44,7 +34,7 @@
       top: 0;
       bottom: 0;
       width: 50%;
-      z-index: 2;
+      z-index: 3;
     }
 
     #leftClickArea { left: 0; }
@@ -52,10 +42,8 @@
   </style>
 </head>
 <body>
-  <img id="background-img" src="" alt="bakgrunnur">
-  <div id="preview">
-    <img id="preview-img" src="" alt="forskoðun">
-  </div>
+  <!-- Bakgrunnsmynd verður sett inn sem <img> í JS -->
+  <div id="preview"></div>
   <div id="leftClickArea"></div>
   <div id="rightClickArea"></div>
   <audio id="music" src="thu.mp3" autoplay loop></audio>
@@ -72,24 +60,53 @@
       preloadedImages.push(img);
     });
 
-    // --- Bakgrunnur ---
-    const backgroundImg = document.getElementById('background-img');
+    // Bakgrunnur
     let currentBgIndex = 0;
+    let backgroundImg;
 
-    backgroundImg.src = imagePaths[currentBgIndex] + '?t=' + Date.now();
+    function showBackgroundImage(index) {
+      const newBg = document.createElement('img');
+      newBg.src = imagePaths[index] + '?t=' + Date.now();
+      newBg.alt = 'bakgrunnur';
+      newBg.style.position = 'fixed';
+      newBg.style.top = '0';
+      newBg.style.left = '0';
+      newBg.style.width = '100%';
+      newBg.style.height = '100%';
+      newBg.style.objectFit = 'cover';
+      newBg.style.zIndex = '0';
 
+      if (backgroundImg) {
+        document.body.removeChild(backgroundImg);
+      }
+
+      document.body.insertBefore(newBg, document.getElementById('preview'));
+      backgroundImg = newBg;
+    }
+
+    // Byrja með fyrstu mynd
+    showBackgroundImage(currentBgIndex);
+
+    // Skipta á 5 sek fresti
     setInterval(() => {
       currentBgIndex = (currentBgIndex + 1) % totalImages;
-      backgroundImg.src = imagePaths[currentBgIndex] + '?t=' + Date.now();
-    }, 4700);
+      showBackgroundImage(currentBgIndex);
+    }, 5000);
 
-    // --- Preview ---
-    const previewImg = document.getElementById('preview-img');
+    // Preview
+    const preview = document.getElementById('preview');
     const visited = [];
     let historyIndex = -1;
 
     function showPreviewImage(index) {
-      previewImg.src = imagePaths[index] + '?t=' + Date.now(); // tryggir fresh load
+      const newImg = document.createElement('img');
+      newImg.src = imagePaths[index] + '?t=' + Date.now();
+      newImg.alt = 'forskoðun';
+      newImg.style.width = '100%';
+      newImg.style.height = '100%';
+      newImg.style.objectFit = 'cover';
+      preview.innerHTML = '';
+      preview.appendChild(newImg);
     }
 
     function goForward() {
@@ -124,11 +141,11 @@
       resetInactivityTimer();
     }
 
-    // --- Smellir á skjá ---
+    // Smellir á skjá
     document.getElementById('rightClickArea').addEventListener('click', goForward);
     document.getElementById('leftClickArea').addEventListener('click', goBack);
 
-    // --- Örvatakkar á lyklaborði ---
+    // Örvatakkar á lyklaborði
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') {
         goForward();
@@ -137,19 +154,19 @@
       }
     });
 
-    // --- Sjálfvirk fletting eftir 5 sekúndur ---
+    // Sjálfvirk fletting eftir 5 sek
     let inactivityTimer;
     function resetInactivityTimer() {
       clearTimeout(inactivityTimer);
       inactivityTimer = setTimeout(() => {
         goForward();
-      }, 4700);
+      }, 5000);
     }
 
-    // Byrjar með fyrstu myndina
+    // Byrja með eina mynd í preview
     goForward();
 
-    // --- Spila lag við hvaða aðgerð sem er (smellur, örvar, takkar) ---
+    // Spila lag við hvaða aðgerð sem er
     function startMusicOnce() {
       const music = document.getElementById('music');
       if (music.paused) {
