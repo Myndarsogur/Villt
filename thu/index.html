@@ -9,14 +9,16 @@
       padding: 0;
       overflow: hidden;
       height: 100%;
+      background: black;
     }
 
-    #background {
+    #background-img {
       position: fixed;
       width: 100%;
       height: 100%;
-      background-size: cover;
-      background-position: center;
+      object-fit: cover;
+      top: 0;
+      left: 0;
       z-index: 0;
     }
 
@@ -27,8 +29,14 @@
       bottom: 150px;
       right: 200px;
       z-index: 1;
-      background-size: cover;
-      background-position: center;
+      background: black;
+    }
+
+    #preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     #leftClickArea, #rightClickArea {
@@ -44,8 +52,10 @@
   </style>
 </head>
 <body>
-  <div id="background"></div>
-  <div id="preview"></div>
+  <img id="background-img" src="" alt="bakgrunnur">
+  <div id="preview">
+    <img id="preview-img" src="" alt="forskoðun">
+  </div>
   <div id="leftClickArea"></div>
   <div id="rightClickArea"></div>
   <audio id="music" src="thu.mp3" autoplay loop></audio>
@@ -55,30 +65,31 @@
     const imagePaths = Array.from({ length: totalImages }, (_, i) => `thu2/mynd${i + 1}.gif`);
 
     // Preload myndirnar
-const preloadedImages = [];
-imagePaths.forEach((src) => {
-  const img = new Image();
-  img.src = src;
-  preloadedImages.push(img);
-});
+    const preloadedImages = [];
+    imagePaths.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+      preloadedImages.push(img);
+    });
+
     // --- Bakgrunnur ---
-    const background = document.getElementById('background');
+    const backgroundImg = document.getElementById('background-img');
     let currentBgIndex = 0;
 
-    background.style.backgroundImage = `url(${imagePaths[currentBgIndex]})`;
+    backgroundImg.src = imagePaths[currentBgIndex] + '?t=' + Date.now();
 
     setInterval(() => {
       currentBgIndex = (currentBgIndex + 1) % totalImages;
-      background.style.backgroundImage = `url(${imagePaths[currentBgIndex]})`;
+      backgroundImg.src = imagePaths[currentBgIndex] + '?t=' + Date.now();
     }, 5000);
 
     // --- Preview ---
-    const preview = document.getElementById('preview');
+    const previewImg = document.getElementById('preview-img');
     const visited = [];
     let historyIndex = -1;
 
     function showPreviewImage(index) {
-      preview.style.backgroundImage = `url(${imagePaths[index]})`;
+      previewImg.src = imagePaths[index] + '?t=' + Date.now(); // tryggir fresh load
     }
 
     function goForward() {
@@ -138,21 +149,20 @@ imagePaths.forEach((src) => {
     // Byrjar með fyrstu myndina
     goForward();
 
-    // Spila lag við fyrsta smell notanda
+    // --- Spila lag við hvaða aðgerð sem er (smellur, örvar, takkar) ---
     function startMusicOnce() {
-    const music = document.getElementById('music');
-    if (music.paused) {
-      music.play().catch((e) => console.log('Ekki tókst að spila lagið:', e));
+      const music = document.getElementById('music');
+      if (music.paused) {
+        music.play().catch((e) => console.log('Ekki tókst að spila lagið:', e));
+      }
+      document.removeEventListener('click', startMusicOnce);
+      document.removeEventListener('keydown', startMusicOnce);
+      document.removeEventListener('mousedown', startMusicOnce);
     }
-    // Fjarlægjum alla hlustara svo þetta gerist bara einu sinni
-    document.removeEventListener('click', startMusicOnce);
-    document.removeEventListener('keydown', startMusicOnce);
-    document.removeEventListener('mousedown', startMusicOnce);
-  }
 
-  document.addEventListener('click', startMusicOnce);       // músarsmellur
-  document.addEventListener('keydown', startMusicOnce);     // allir takkar (örvar, space, etc.)
-  document.addEventListener('mousedown', startMusicOnce);   // ef notandi ýtir á músartakka
-</script>
+    document.addEventListener('click', startMusicOnce);
+    document.addEventListener('keydown', startMusicOnce);
+    document.addEventListener('mousedown', startMusicOnce);
+  </script>
 </body>
 </html>
