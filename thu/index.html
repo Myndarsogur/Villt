@@ -81,7 +81,7 @@
     setInterval(() => {
       currentBgIndex = (currentBgIndex + 1) % totalImages;
       backgroundImg.src = imagePaths[currentBgIndex] + '?t=' + Date.now();
-    }, 4900);
+    }, 4700);
 
     // --- Preview ---
     const previewImg = document.getElementById('preview-img');
@@ -143,7 +143,7 @@
       clearTimeout(inactivityTimer);
       inactivityTimer = setTimeout(() => {
         goForward();
-      }, 4900);
+      }, 4700);
     }
 
     // Byrjar með fyrstu myndina
