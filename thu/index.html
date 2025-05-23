@@ -55,6 +55,13 @@
     const totalImages = 49;
     const imagePaths = Array.from({ length: totalImages }, (_, i) => `thu2/mynd${i + 1}.gif`);
 
+    // Preload myndirnar
+const preloadedImages = [];
+imagePaths.forEach((src) => {
+  const img = new Image();
+  img.src = src;
+  preloadedImages.push(img);
+});
     // --- Bakgrunnur ---
     const background = document.getElementById('background');
     let currentBgIndex = 0;
