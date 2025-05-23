@@ -2,7 +2,7 @@
 <html lang="is">
 <head>
   <meta charset="UTF-8">
-  <title>Þú víst sú</title>
+  <title>Myndir og Tónlist</title>
   <style>
     html, body {
       margin: 0;
@@ -20,7 +20,6 @@
       height: 100%;
       object-fit: cover;
       z-index: 0;
-      transition: opacity 2s ease-in-out;
     }
 
     #preview {
@@ -31,18 +30,13 @@
       right: 200px;
       z-index: 2;
       background: black;
-      overflow: hidden;
     }
 
     #preview img {
-      position: absolute;
-      top: 0;
-      left: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
-      transition: opacity 0.1s ;
     }
 
     #leftClickArea, #rightClickArea {
@@ -58,9 +52,9 @@
   </style>
 </head>
 <body>
-  <!-- Tveir bakgrunns-<img> sem fade-a á milli -->
-  <img id="bg1" class="background-img" src="" style="opacity: 1;">
-  <img id="bg2" class="background-img" src="" style="opacity: 0;">
+  <!-- Tvær <img> fyrir bakgrunn -->
+  <img id="bg1" class="background-img" src="">
+  <img id="bg2" class="background-img" src="">
 
   <div id="preview"></div>
   <div id="leftClickArea"></div>
@@ -77,7 +71,7 @@
       img.src = src;
     });
 
-    // Fade bakgrunnur
+    // Bakgrunnsskipti án fade
     const bg1 = document.getElementById('bg1');
     const bg2 = document.getElementById('bg2');
     let useBg1 = true;
@@ -85,16 +79,12 @@
 
     function switchBackground(index) {
       const nextSrc = imagePaths[index] + '?t=' + Date.now();
+      const topImg = useBg1 ? bg2 : bg1;
+      const bottomImg = useBg1 ? bg1 : bg2;
 
-      if (useBg1) {
-        bg2.src = nextSrc;
-        bg2.style.opacity = 1;
-        bg1.style.opacity = 0;
-      } else {
-        bg1.src = nextSrc;
-        bg1.style.opacity = 1;
-        bg2.style.opacity = 0;
-      }
+      topImg.src = nextSrc;
+      topImg.style.zIndex = 1;
+      bottomImg.style.zIndex = 0;
 
       useBg1 = !useBg1;
     }
@@ -117,20 +107,8 @@
       newImg.style.width = '100%';
       newImg.style.height = '100%';
       newImg.style.objectFit = 'cover';
-      newImg.style.opacity = '0';
-      newImg.style.transition = 'opacity 1s ease-in-out';
-
-      const oldImg = preview.querySelector('img');
-      if (oldImg) {
-        oldImg.style.opacity = '0';
-        setTimeout(() => oldImg.remove(), 1000);
-      }
-
+      preview.innerHTML = '';
       preview.appendChild(newImg);
-
-      requestAnimationFrame(() => {
-        newImg.style.opacity = '1';
-      });
     }
 
     function goForward() {
@@ -169,8 +147,11 @@
     document.getElementById('leftClickArea').addEventListener('click', goBack);
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight') goForward();
-      else if (e.key === 'ArrowLeft') goBack();
+      if (e.key === 'ArrowRight') {
+        goForward();
+      } else if (e.key === 'ArrowLeft') {
+        goBack();
+      }
     });
 
     let inactivityTimer;
@@ -181,9 +162,8 @@
       }, 5000);
     }
 
-    goForward(); // sýna fyrstu mynd
+    goForward();
 
-    // Hljóð spilar eftir gagnvirkni
     function startMusicOnce() {
       const music = document.getElementById('music');
       if (music.paused) {
