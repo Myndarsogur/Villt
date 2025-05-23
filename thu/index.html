@@ -2,7 +2,7 @@
 <html lang="is">
 <head>
   <meta charset="UTF-8">
-  <title>Myndir og Tónlist</title>
+  <title>Þú víst sú</title>
   <style>
     html, body {
       margin: 0;
@@ -52,7 +52,6 @@
   </style>
 </head>
 <body>
-  <!-- Tvær <img> fyrir bakgrunn -->
   <img id="bg1" class="background-img" src="">
   <img id="bg2" class="background-img" src="">
 
@@ -65,13 +64,13 @@
     const totalImages = 49;
     const imagePaths = Array.from({ length: totalImages }, (_, i) => `thu2/mynd${i + 1}.gif`);
 
-    // Preload myndirnar
+    // Preload myndir
     imagePaths.forEach(src => {
       const img = new Image();
       img.src = src;
     });
 
-    // Bakgrunnsskipti án fade
+    // Bakgrunnur – no fade
     const bg1 = document.getElementById('bg1');
     const bg2 = document.getElementById('bg2');
     let useBg1 = true;
@@ -82,11 +81,14 @@
       const topImg = useBg1 ? bg2 : bg1;
       const bottomImg = useBg1 ? bg1 : bg2;
 
-      topImg.src = nextSrc;
-      topImg.style.zIndex = 1;
-      bottomImg.style.zIndex = 0;
-
-      useBg1 = !useBg1;
+      const loader = new Image();
+      loader.src = nextSrc;
+      loader.onload = () => {
+        topImg.src = nextSrc;
+        topImg.style.zIndex = 1;
+        bottomImg.style.zIndex = 0;
+        useBg1 = !useBg1;
+      };
     }
 
     switchBackground(currentBgIndex);
@@ -101,14 +103,19 @@
     let historyIndex = -1;
 
     function showPreviewImage(index) {
-      const newImg = document.createElement('img');
-      newImg.src = imagePaths[index] + '?t=' + Date.now();
-      newImg.alt = 'forskoðun';
-      newImg.style.width = '100%';
-      newImg.style.height = '100%';
-      newImg.style.objectFit = 'cover';
-      preview.innerHTML = '';
-      preview.appendChild(newImg);
+      const nextSrc = imagePaths[index] + '?t=' + Date.now();
+      const loader = new Image();
+      loader.src = nextSrc;
+      loader.onload = () => {
+        const newImg = document.createElement('img');
+        newImg.src = nextSrc;
+        newImg.alt = 'forskoðun';
+        newImg.style.width = '100%';
+        newImg.style.height = '100%';
+        newImg.style.objectFit = 'cover';
+        preview.innerHTML = '';
+        preview.appendChild(newImg);
+      };
     }
 
     function goForward() {
