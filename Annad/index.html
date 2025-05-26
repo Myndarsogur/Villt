@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8">
+  <title>6 Módel með Stjórnun</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    model-viewer {
+      width: 100%;
+      max-width: 300px;
+      height: 300px;
+      background: #000;
+      border: 1px solid #333;
+      flex: 1 1 calc(33.33% - 40px);
+    }
+
+    @media (max-width: 1000px) {
+      model-viewer {
+        flex: 1 1 calc(50% - 40px);
+      }
+    }
+
+    @media (max-width: 600px) {
+      model-viewer {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Módel 1–6: tryggðu að skrárnar séu til -->
+  <model-viewer src="model1.glb" alt="Módel 1" auto-rotate rotation-per-second="30deg"
+    camera-controls ar ar-modes="webxr scene-viewer quick-look"></model-viewer>
+
+  <model-viewer src="model2.glb" alt="Módel 2" auto-rotate rotation-per-second="-30deg"
+    camera-controls ar ar-modes="webxr scene-viewer quick-look"></model-viewer>
+
+  <model-viewer src="model3.glb" alt="Módel 3" auto-rotate rotation-per-second="30deg"
+    camera-controls ar ar-modes="webxr scene-viewer quick-look"></model-viewer>
+
+  <model-viewer src="model4.glb" alt="Módel 4" auto-rotate rotation-per-second="-30deg"
+    camera-controls ar ar-modes="webxr scene-viewer quick-look"></model-viewer>
+
+  <model-viewer src="model5.glb" alt="Módel 5" auto-rotate rotation-per-second="30deg"
+    camera-controls ar ar-modes="webxr scene-viewer quick-look"></model-viewer>
+
+  <model-viewer src="model6.glb" alt="Módel 6" auto-rotate rotation-per-second="-30deg"
+    camera-controls ar ar-modes="webxr scene-viewer quick-look"></model-viewer>
+
+  <script>
+    // ✅ Gyroscope virkjun
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', () => {
+        document.querySelectorAll('model-viewer').forEach(m => {
+          m.setAttribute('camera-controls', '');
+          m.setAttribute('interaction-prompt', 'none');
+        });
+      }, { once: true });
+    }
+
+    // ✅ Swipe zoom (upp = zoom in, niður = zoom out)
+    let touchStartY = null;
+
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        touchStartY = e.touches[0].clientY;
+      }
+    });
+
+    document.addEventListener('touchend', (e) => {
+      if (touchStartY !== null && e.changedTouches.length === 1) {
+        const touchEndY = e.changedTouches[0].clientY;
+        const deltaY = touchEndY - touchStartY;
+
+        document.querySelectorAll('model-viewer').forEach(m => {
+          const orbit = m.getCameraOrbit();
+          let newZoom = orbit.radius + (deltaY > 0 ? 0.5 : -0.5);
+          newZoom = Math.max(1, Math.min(newZoom, 10));
+          m.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${newZoom}m`;
+        });
+
+        touchStartY = null;
+      }
+    });
+  </script>
+
+</body>
+</html>
