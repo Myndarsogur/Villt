@@ -56,37 +56,40 @@
         const imageLoader = new THREE.TextureLoader();
         const images = Array.from({length: 49}, (_, i) => `myndir/mynd${i + 1}.gif`);
 
-        images.forEach((imagePath, index) => {
+   
+
+        const videoTextures = [];
+        const videoPaths = Array.from({length: 49}, (_, i) => `video/mynd${i + 1}.mp4`);
+
+        videoPaths.forEach((videoPath, index) => {
+            const video = document.createElement('video');
+            video.src = videoPath;
+            video.loop = true;
+            video.muted = true;
+            video.playsInline = true;
+            video.autoplay = true;
+            video.play();
+
+            const texture = new THREE.VideoTexture(video);
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.format = THREE.RGBFormat;
+
             const zPosition = -171.5 + (index * 7);
             const side = index % 2 === 0 ? -1 : 1;
 
-            imageLoader.load(
-                imagePath,
-                (texture) => {
-                    texture.flipY = false;
-                    texture.minFilter = THREE.NearestFilter;
-                    texture.magFilter = THREE.NearestFilter;
+            const imageMaterial = new THREE.MeshBasicMaterial({ 
+                map: texture,
+                side: THREE.DoubleSide,
+                transparent: true
+            });
 
-                    const imageMaterial = new THREE.MeshBasicMaterial({ 
-                        map: texture,
-                        side: THREE.DoubleSide,
-                        transparent: true
-                    });
-
-                    const imageMesh = new THREE.Mesh(imageGeometry, imageMaterial);
-                    imageMesh.position.set(side * 9.5, wallHeight / 2, zPosition);
-                    imageMesh.rotation.y = side * Math.PI / 2;
-                    imageMesh.rotation.z = Math.PI; // Snýr myndinni rétt
-
-                    imageMesh.onBeforeRender = () => {
-                        texture.needsUpdate = true;
-                    };
-
-                    scene.add(imageMesh);
-                },
-                undefined,
-                (error) => console.error(`Error loading ${imagePath}:`, error)
-            );
+            const imageMesh = new THREE.Mesh(imageGeometry, imageMaterial);
+            imageMesh.position.set(side * 9.5, wallHeight/2, zPosition);
+            imageMesh.rotation.y = side * Math.PI / 2;
+            
+            scene.add(imageMesh);
+            videoTextures.push({ texture, video });
         });
 
         camera.position.y = 6;
@@ -253,6 +256,10 @@
                 if (positions[i] > 200) positions[i] = -200;
             }
             clouds.geometry.attributes.position.needsUpdate = true;
+
+            videoTextures.forEach(({ texture }) => {
+                texture.needsUpdate = true;
+            });
 
             moveCamera();
             renderer.render(scene, camera);
