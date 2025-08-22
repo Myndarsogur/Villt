@@ -1,39 +1,78 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="is">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EPUB niðurhal</title>
-  <meta name="description" content="Sækja EPUB-bækur af þessari síðu." />
+  <title>Bækur</title>
   <style>
-    :root {
-      --bg: #ffffff;
-      --fg: #111111;
-      --muted: #666666;
-      --card: #f5f5f5;
-      --border: #e6e6e6;
-      --focus: #000000;
-    }
+    :root { color-scheme: light dark; }
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    .wrap { max-width: 960px; margin: 0 auto; padding: 2rem 1rem 4rem; }
-    header { display: grid; gap: .5rem; margin-bottom: 1.5rem; }
-    h1 { font-size: clamp(1.6rem, 2.3vw + 1rem, 2.4rem); margin: 0; }
-    p.lead { color: var(--muted); margin: 0; }
+    html, body { margin: 0; padding: 0; background: #d8acac; color: #ffffff; font: 16px/1.4 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
 
-    .toolbar { display: flex; gap: .75rem; align-items: center; margin: 1rem 0 1.25rem; flex-wrap: wrap; }
-    .search {
-      flex: 1 1 260px;
-      display: grid; grid-template-columns: 1.5rem 1fr; align-items: center; gap: .5rem;
-      background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: .5rem .75rem;
+    main { max-width: 900px; margin: 0 auto; padding: 16px; }
+
+    /* 2×2 grid sem teygir sig niður síma (tvær dálkar, margar raðir) */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
     }
-    .search input { border: none; background: transparent; outline: none; font-size: 1rem; color: var(--fg); }
-    .search svg { width: 1rem; height: 1rem; }
 
-    ul.grid { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    /* Hver bók er einföld smelliflötur með bara titli (engin umgjörð eða aukahlutir) */
+    a.book {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid #ffffff;
+      border-radius: 8px;
+      padding: 20px;
+      min-height: 420px;
+      max-width: 310px;
+    
+    }
 
-    .card { display: grid; gap: .6rem; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1rem; }
-    .card h3 { margin: 0; font-size: 1.05rem; }
+    .title { font-weight: 600; font-size: clamp(3.5rem, 2vw, 310px);text-shadow: 20px 15px 8px rgba(0,0,0,0.5); 
+    }
+
+    /* Smávægileg aðlögun á örþröngum skjám */
+    @media (max-width: 460px) {
+      a.book { padding: 16px; min-height: 96px; }
+      .title { font-size: 1rem; }
+    }
+
+    /* Engir litir, aðeins svart/hvítt */
+    img, svg { filter: grayscale(100%); }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="grid" aria-label="EPUB bækur">
+      <!-- Settu allt að ~6 bækur hér að neðan. Aðeins titill og hlekkur. -->
+      <a class="book" href="/downloads/bok1.epub" download style="background: #a9e3b5;">
+        <div class="title">Nú eru góð ráð plöntur</div>
+      </a>
+      <a class="book" href="/downloads/bok2.epub" download style="background: #d4e7e7;">
+        <div class="title">Now there are good advice plants</div>
+      </a>
+      <a class="book" href="/downloads/bok3.epub" download style="background: #e6d4f7;">
+        <div class="title">Vók</div>
+      </a>
+      <a class="book" href="/downloads/bok4.epub" download>
+        <div class="title">Ný bók</div>
+      </a>
+      <a class="book" href="/downloads/bok5.epub" download>
+        <div class="title">Titill bókar 5</div>
+      </a>
+      <a class="book" href="/downloads/bok6.epub" download>
+        <div class="title">Titill bókar 6</div>
+      </a>
+    </section>
+  </main>
+</body>
+</html>
     .meta { color: var(--muted); font-size: .9rem; }
 
     .btn { appearance: none; display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1rem; border-radius: 12px; border: 1px solid var(--fg); background: var(--fg); color: #fff; text-decoration: none; font-weight: 600; width: fit-content; }
