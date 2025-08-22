@@ -54,12 +54,43 @@
         const imageWidth = 14;
         const imageGeometry = new THREE.PlaneGeometry(imageWidth, wallHeight);
         const imageLoader = new THREE.TextureLoader();
-        const images = Array.from({length: 49}, (_, i) => `myndir/mynd${i + 1}.gif`);
+        const images = Array.from({length: 49}, (_, i) => `myndasafn/mynd${i + 1}.jpeg`);
 
-   
+        images.forEach((imagePath, index) => {
+            const zPosition = -171.5 + (index * 7);
+            const side = index % 2 === 0 ? -1 : 1;
+
+            imageLoader.load(
+                imagePath,
+                (texture) => {
+                    texture.flipY = false;
+                    texture.minFilter = THREE.NearestFilter;
+                    texture.magFilter = THREE.NearestFilter;
+
+                    const imageMaterial = new THREE.MeshBasicMaterial({ 
+                        map: texture,
+                        side: THREE.DoubleSide,
+                        transparent: true
+                    });
+
+                    const imageMesh = new THREE.Mesh(imageGeometry, imageMaterial);
+                    imageMesh.position.set(side * 9.5, wallHeight / 2, zPosition);
+                    imageMesh.rotation.y = side * Math.PI / 2;
+                    imageMesh.rotation.z = Math.PI; // Snýr myndinni rétt
+
+                    imageMesh.onBeforeRender = () => {
+                        texture.needsUpdate = true;
+                    };
+
+                    scene.add(imageMesh);
+                },
+                undefined,
+                (error) => console.error(`Error loading ${imagePath}:`, error)
+            );
+        });
 
         const videoTextures = [];
-        const videoPaths = Array.from({length: 49}, (_, i) => `video/mynd${i + 1}.mp4`);
+        const videoPaths = Array.from({length: 49}, (_, i) => `myndasafn/mynd${i + 1}.jpeg`);
 
         videoPaths.forEach((videoPath, index) => {
             const video = document.createElement('video');
