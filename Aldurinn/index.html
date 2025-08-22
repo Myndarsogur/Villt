@@ -157,7 +157,7 @@
 </head>
 <body>
 
-  <img id="image" src="Bakgrunnsmynd/mynd1.jpeg" alt="mynd">
+  <img id="image" src="Bakgrunnsmyndir/mynd1.jpeg" alt="mynd">
 
   <div id="text-display">Hleð texta...</div>
 
@@ -175,14 +175,14 @@
     function preloadNextImage(imageNumber) {
       if (imageNumber <= totalImages) {
         const img = new Image();
-        img.src = `Bakgrunnsmynd/mynd${imageNumber}.jpeg`;
+        img.src = `Bakgrunnsmyndir/mynd${imageNumber}.jpeg`;
         console.log('Preloading image:', img.src); // Villuleit
       }
     }
 
     function updateImage() {
       isTransitioning = true;
-      image.src = `Bakgrunnsmynd/mynd${currentImage}.jpeg`;
+      image.src = `Bakgrunnsmyndir/mynd${currentImage}.jpeg`;
       console.log('Updating image to:', image.src); // Villuleit
       preloadNextImage(currentImage + 1);
       
