@@ -11,14 +11,17 @@
 
     main { max-width: 900px; margin: 0 auto; padding: 16px; }
 
-    /* 2×2 grid sem teygir sig niður síma (tvær dálkar, margar raðir) */
+    /* Grid sem lagar sig þannig að 4 reitir passi vel á skjá (2×2 á síma) */
     .grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 dálkar by default fyrir símaskjá */
       gap: 12px;
     }
+    @media (min-width: 768px) {
+      .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } /* 4 dálkar á stærri skjám */
+    }
 
-    /* Hver bók er einföld smelliflötur með bara titli (engin umgjörð eða aukahlutir) */
+    /* Hver bók er einföld smelliflötur með titli. Nú með sveigjanlegri stærð. */
     a.book {
       display: flex;
       align-items: center;
@@ -28,22 +31,23 @@
       color: inherit;
       border: 1px solid #ffffff;
       border-radius: 8px;
-      padding: 20px;
-      min-height: 420px;
-      max-width: 310px;
-    
+      padding: 14px;              /* minna padding svo 2×2 passi án zooms */
+      aspect-ratio: 1 / 1.6;        /* ferkantaðir reitir; tryggir 2 raðir passi vel */
+      min-height: 0;              /* fjarlægjum fyrri læsingar */
+      max-width: none;
     }
 
-    .title { font-weight: 600; font-size: clamp(3.5rem, 2vw, 310px);text-shadow: 20px 15px 8px rgba(0,0,0,0.5); 
+    .title {
+      font-weight: 600;
+      /* Stærð stillt fyrir betri aðlögun í reitnum */
+      font-size: clamp(3.1rem, 1vw, 2.2rem);
+      line-height: 1.1;
+      /* Skuggi eins og þú baðst um */
+      text-shadow:2px 0px 122px rgba(0,0,0,0.5);
     }
 
-    /* Smávægileg aðlögun á örþröngum skjám */
-    @media (max-width: 210px;) {
-      a.book { padding: 16px; min-height: 320px; }
-      .title { font-size: 1rem; }
-    }
 
-    /* Engir litir, aðeins svart/hvítt */
+    /* Engir litir, aðeins svart/hvítt á myndum/ikonum */
     img, svg { filter: grayscale(100%); }
   </style>
 </head>
@@ -51,16 +55,16 @@
   <main>
     <section class="grid" aria-label="EPUB bækur">
       <!-- Settu allt að ~6 bækur hér að neðan. Aðeins titill og hlekkur. -->
-      <a class="book" href="/downloads/bok1.epub" download style="background: #a9e3b5;">
+      <a class="book" href="/downloads/bok1.epub" download style="background: #a9e3b5; border: #1efe4b;" border-size="1px">
         <div class="title">Nú eru góð ráð plöntur</div>
       </a>
-      <a class="book" href="/downloads/bok2.epub" download style="background: #d4e7e7;">
+      <a class="book" href="/downloads/bok2.epub" download style="background: #d4e7e7;border: #2454f3;">
         <div class="title">Now there are good advice plants</div>
       </a>
-      <a class="book" href="/downloads/bok3.epub" download style="background: #e6d4f7;">
+      <a class="book" href="/downloads/bok3.epub" download style="background: #e6d4f7;border: #fe1eeb;">
         <div class="title">Vók</div>
       </a>
-      <a class="book" href="/downloads/bok4.epub" download>
+      <a class="book" href="/downloads/bok4.epub" download style="background: #none ;border: #fe1eeb;">
         <div class="title">Ný bók</div>
       </a>
       <a class="book" href="/downloads/bok5.epub" download>
