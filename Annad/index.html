@@ -78,24 +78,29 @@
     imageLoader.load(
       file,
       (texture) => {
-        texture.anisotropy = renderer.capabilities.getMaxAnisotropy?.() || 1;
-        if (THREE?.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
-        // ATH: engin onBeforeRender/needsUpdate hér! (fastar myndir þurfa það ekki)
-        // ATH: engin flipY/rotation.z-trix; default snúningur er réttur á PlaneGeometry.
+  // gæði/litapláss
+  texture.anisotropy = renderer.capabilities.getMaxAnisotropy?.() || 1;
+  if (THREE?.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
 
-        const mat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, transparent: true });
-        const mesh = new THREE.Mesh(imageGeom, mat);
+  // bara framhlið (betri frammistaða og engin speglun bakhliðar)
+  const mat = new THREE.MeshBasicMaterial({
+    map: texture,
+    side: THREE.FrontSide,
+    transparent: true
+  });
 
-        const z = startZ + i * SPACING;
-        const side = i % 2 === 0 ? -1 : 1;
-        mesh.position.set(side * 9.5, wallHeight / 2, z);
-        if (side === -1) {
-  mesh.rotation.y =  Math.PI / 2;   // vinstri veggur
-} else {
-  mesh.rotation.y = -Math.PI / 2;   // hægri veggur
-}
-        scene.add(mesh);
-      },
+  const mesh = new THREE.Mesh(imageGeom, mat);
+
+  const z = startZ + i * SPACING;
+  const side = i % 2 === 0 ? -1 : 1;
+  mesh.position.set(side * 9.5, wallHeight / 2, z);
+  mesh.rotation.y = (side === -1) ?  Math.PI / 2 : -Math.PI / 2;
+
+  scene.add(mesh);
+},
       undefined,
       (err) => console.error(`Gat ekki hlaðið ./myndasafn/${file}`, err)
     );
