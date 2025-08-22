@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EPUB niðurhal</title>
+  <meta name="description" content="Sækja EPUB-bækur af þessari síðu." />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #111111;
+      --muted: #666666;
+      --card: #f5f5f5;
+      --border: #e6e6e6;
+      --focus: #000000;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+    header { display: grid; gap: .5rem; margin-bottom: 1.5rem; }
+    h1 { font-size: clamp(1.6rem, 2.3vw + 1rem, 2.4rem); margin: 0; }
+    p.lead { color: var(--muted); margin: 0; }
+
+    .toolbar { display: flex; gap: .75rem; align-items: center; margin: 1rem 0 1.25rem; flex-wrap: wrap; }
+    .search {
+      flex: 1 1 260px;
+      display: grid; grid-template-columns: 1.5rem 1fr; align-items: center; gap: .5rem;
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: .5rem .75rem;
+    }
+    .search input { border: none; background: transparent; outline: none; font-size: 1rem; color: var(--fg); }
+    .search svg { width: 1rem; height: 1rem; }
+
+    ul.grid { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+    .card { display: grid; gap: .6rem; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1rem; }
+    .card h3 { margin: 0; font-size: 1.05rem; }
+    .meta { color: var(--muted); font-size: .9rem; }
+
+    .btn { appearance: none; display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1rem; border-radius: 12px; border: 1px solid var(--fg); background: var(--fg); color: #fff; text-decoration: none; font-weight: 600; width: fit-content; }
+    .btn:hover { filter: brightness(1.08); }
+    .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .btn small { opacity: .85; font-weight: 500; }
+
+    footer.page { margin-top: 2rem; color: var(--muted); font-size: .9rem; }
+
+    /* Black & white only aesthetics (engir litir) */
+    img, svg { filter: grayscale(100%); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>📚 EPUB niðurhal</h1>
+      <p class="lead">Hér getur þú sótt bækur í <strong>EPUB</strong>-sniði. Smelltu á „Sækja“ til að vista á tækinu þínu eða opna í lesara.</p>
+    </header>
+
+    <div class="toolbar" role="region" aria-label="Leitarstýringar">
+      <label class="search" aria-label="Leita í bókum">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4a6 6 0 1 1 0 12A6 6 0 0 1 10 4m0-2a8 8 0 0 0-5.292 13.708l-2.5 2.5a1 1 0 1 0 1.414 1.414l2.5-2.5A8 8 0 1 0 10 2Z"/></svg>
+        <input id="q" placeholder="Leita eftir titli eða höfundi…" autocomplete="off" />
+      </label>
+    </div>
+
+    <ul id="book-list" class="grid" aria-live="polite"></ul>
+
+    <footer class="page">
+      <p><strong>Vinnureglur:</strong> Settu <code>.epub</code> skrárnar í möppuna <code>/downloads/</code> á vefnum þínum. Bættu svo nýjum færslum í <code>BOOKS</code> listann fyrir neðan. Vafrinn mun reyna að sækja skráarstærð (HEAD-beiðni) og sýna hana sjálfkrafa.</p>
+      <!--
+        👉 Hvernig á að bæta við bók:
+        1) Hladdu upp skránni í /downloads/ (t.d. /downloads/Bok1.epub)
+        2) Bættu við í BOOKS fyrir neðan, t.d. { title: "Bók 1", author: "Höfundur", file: "/downloads/Bok1.epub" }
+
+        Ef þú stjórnar netþjóni:
+          - Apache:  AddType application/epub+zip .epub
+          - Nginx:   types { application/epub+zip epub; }
+        Á GitHub Pages er þetta yfirleitt sjálfvirkt í lagi.
+      -->
+    </footer>
+  </div>
+
+  <noscript>
+    <p style="padding:1rem; background:#fff3cd; color:#111;">Til að sjá lista yfir bækur og stærðir þarftu að virkja JavaScript.</p>
+  </noscript>
+
+  <script>
+    // 🔧 SKRÁALISTI — Breyttu þessu!
+    // Bættu bókum hér: title (titill), author (höfundur), file (slóð á .epub), 
+    // optional: year, lang, filename (yfirskrifar sjálfvirkt heiti fyrir download=)
+    const BOOKS = [
+      { title: "Bók 1", author: "Höfundur A", year: 2025, lang: "IS", file: "/downloads/bok1.epub" },
+      { title: "Bók 2", author: "Höfundur B", year: 2024, lang: "IS", file: "/downloads/bok2.epub" },
+      { title: "Bók 3", author: "Höfundur C", year: 2023, lang: "EN", file: "/downloads/bok3.epub" }
+    ];
+
+    const $list = document.getElementById('book-list');
+    const $q = document.getElementById('q');
+
+    function humanSize(bytes) {
+      const n = parseInt(bytes, 10);
+      if (!Number.isFinite(n) || n <= 0) return null;
+      const units = ['B','KB','MB','GB','TB'];
+      const e = Math.floor(Math.log(n) / Math.log(1024));
+      return (n / Math.pow(1024, e)).toFixed(e ? 1 : 0) + ' ' + units[e];
+    }
+
+    function fileBaseName(path) {
+      try { return decodeURIComponent(path.split('/').pop() || 'book.epub'); } catch { return 'book.epub'; }
+    }
+
+    async function fetchSize(url) {
+      try {
+        const res = await fetch(url, { method: 'HEAD' });
+        const len = res.headers.get('content-length');
+        return humanSize(len);
+      } catch (e) { return null; }
+    }
+
+    function bookCard(book) {
+      const li = document.createElement('li');
+      li.className = 'card';
+
+      const h3 = document.createElement('h3');
+      h3.textContent = book.title;
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const bits = [];
+      if (book.author) bits.push(book.author);
+      if (book.year) bits.push(String(book.year));
+      if (book.lang) bits.push(book.lang);
+      meta.textContent = bits.join(' · ');
+
+      const a = document.createElement('a');
+      a.href = book.file;
+      a.rel = 'noopener';
+      a.setAttribute('type', 'application/epub+zip');
+      const suggestedName = book.filename || fileBaseName(book.file);
+      a.setAttribute('download', suggestedName);
+      a.className = 'btn';
+      a.setAttribute('aria-label', `Sækja ${book.title} sem EPUB`);
+      a.innerHTML = `📥 Sækja EPUB <small>(${suggestedName})</small>`;
+
+      const size = document.createElement('div');
+      size.className = 'meta';
+      size.textContent = 'Stærð: •••';
+      // Fyllum stærð þegar hún finnst
+      fetchSize(book.file).then(s => { if (s) size.textContent = `Stærð: ${s}`; else size.textContent = 'Stærð: óþekkt'; });
+
+      li.append(h3);
+      if (bits.length) li.append(meta);
+      li.append(a);
+      li.append(size);
+      return li;
+    }
+
+    function render(list) {
+      $list.innerHTML = '';
+      list.forEach(b => $list.append(bookCard(b)));
+      if (!list.length) {
+        const empty = document.createElement('p');
+        empty.className = 'meta';
+        empty.textContent = 'Engar niðurstöður.';
+        $list.append(empty);
+      }
+    }
+
+    function normalize(s) { return (s || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, ''); }
+
+    function applyFilter() {
+      const q = normalize($q.value);
+      if (!q) return render(BOOKS);
+      const filtered = BOOKS.filter(b => {
+        const hay = normalize([b.title, b.author, b.year, b.lang].filter(Boolean).join(' '));
+        return hay.includes(q);
+      });
+      render(filtered);
+    }
+
+    $q.addEventListener('input', applyFilter);
+    render(BOOKS);
+  </script>
+</body>
+</html>
