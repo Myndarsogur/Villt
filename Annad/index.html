@@ -130,6 +130,219 @@
   // Stýringar
   let yaw = 0;
   const ROT = 0.05, MOVE = 0.25;
+  const keys = {};
+  addEventListener('keydown', (e) => keys[e.key] = true);
+  addEventListener('keyup',   (e) => keys[e.key] = false);
+
+  function updateControls() {
+    if (keys['ArrowLeft'])  yaw += ROT;
+    if (keys['ArrowRight']) yaw -= ROT;
+    camera.rotation.y = yaw;
+
+    const forward = new THREE.Vector3(Math.sin(-yaw), 0, Math.cos(-yaw));
+    if (keys['ArrowUp'])   camera.position.addScaledVector(forward, -MOVE);
+    if (keys['ArrowDown']) camera.position.addScaledVector(forward,  MOVE);
+
+    const half = corridorLen / 2 - 5;
+    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -4, 4);
+    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -half, half);
+  }
+
+  // Hljóð (óbreytt)
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  let touchSound = null, touchSoundLoaded = false;
+  function loadAndPlaySound() {
+    if (touchSoundLoaded) { playTouchSound(); return; }
+    fetch('./thu.mp3')
+      .then(r => r.arrayBuffer())
+      .then(b => audioContext.decodeAudioData(b))
+      .then(buf => { touchSound = buf; touchSoundLoaded = true; playTouchSound(); })
+      .catch(err => console.error('Error loading audio:', err));
+  }
+  function playTouchSound() {
+    if (!touchSound) return;
+    const src = audioContext.createBufferSource();
+    src.buffer = touchSound;
+    src.connect(audioContext.destination);
+    src.start(0);
+  }
+
+  // Snertistýringar
+  let tX = 0, tY = 0, swiping = false;
+  addEventListener('touchstart', (ev) => {
+    ev.preventDefault();
+    if (audioContext.state === 'suspended') audioContext.resume().then(loadAndPlaySound);
+    else loadAndPlaySound();
+    const t = ev.touches[0];
+    tX = t.clientX; tY = t.clientY;
+    swiping = true;
+  }, { passive: false });
+
+  addEventListener('touchmove', (ev) => {
+    ev.preventDefault();
+    if (!swiping) return;
+    const t = ev.touches[0];
+    const dX = t.clientX - tX;
+    const dY = t.clientY - tY;
+
+    if (Math.abs(dX) > Math.abs(dY)) {
+      if (dX > 40)  { yaw += ROT; tX = t.clientX; }
+      if (dX < -40) { yaw -= ROT; tX = t.clientX; }
+    } else {
+      const forward = new THREE.Vector3(Math.sin(-yaw), 0, Math.cos(-yaw));
+      if (dY > 400)  { camera.position.addScaledVector(forward, -MOVE); tY = t.clientY; }
+      if (dY < -400) { camera.position.addScaledVector(forward,  MOVE); tY = t.clientY; }
+    }
+  }, { passive: false });
+
+  addEventListener('touchend', (ev) => { ev.preventDefault(); swiping = false; }, { passive: false });
+
+  // Ský og litabreytingar
+  const skyColors = [0x404040,0x606060,0x808080,0xA0A0A0,0xC0C0C0,0xE0E0E0].map(c => new THREE.Color(c));
+  let skyI = 0, skyNext = 1, skyT = 0; const skyDur = 4;
+
+  const groundColors = [0x2d5a27,0x3cb371,0x90ee90,0x98fb98,0x228b22,0x32cd32].map(c => new THREE.Color(c));
+  let gI = 0, gNext = 1, gT = 0; const gDur = 4;
+
+  function createClouds() {
+    const geo = new THREE.BufferGeometry();
+    const mat = new THREE.PointsMaterial({ size: 4, transparent: true, opacity: 0.6, color: 0xffffff, blending: THREE.AdditiveBlending, sizeAttenuation: true });
+    const pts = [];
+    for (let i = 0; i < 500; i++) pts.push(Math.random()*400-200, 20+Math.random()*10, Math.random()*400-200);
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    const clouds = new THREE.Points(geo, mat);
+    scene.add(clouds);
+    return clouds;
+  }
+  const clouds = createClouds();
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    skyT += 0.016; if (skyT >= skyDur) { skyT = 0; skyI = skyNext; skyNext = (skyNext + 1) % skyColors.length; }
+    gT   += 0.016; if (gT   >= gDur)   { gT   = 0; gI   = gNext; gNext   = (gNext   + 1) % groundColors.length; }
+
+    scene.background = new THREE.Color().lerpColors(skyColors[skyI], skyColors[skyNext], skyT / skyDur);
+    floor.material.color.lerpColors(groundColors[gI], groundColors[gNext], gT / gDur);
+
+    const pos = clouds.geometry.attributes.position.array;
+    for (let i = 0; i < pos.length; i += 3) { pos[i] += 0.01; if (pos[i] > 200) pos[i] = -200; }
+    clouds.geometry.attributes.position.needsUpdate = true;
+
+    updateControls();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Resize
+  function resizeRenderer() {
+    const w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  addEventListener('resize', resizeRenderer);
+  addEventListener('orientationchange', () => setTimeout(resizeRenderer, 250));
+</script>
+</body>
+</html>
+
+  const corridorLen = COUNT * SPACING + MARGIN;
+
+  // Gólf
+  const texLoader = new THREE.TextureLoader();
+  const grass = texLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
+  grass.wrapS = THREE.RepeatWrapping;
+  grass.wrapT = THREE.RepeatWrapping;
+  grass.repeat.set(2, Math.max(8, Math.floor(corridorLen / 25)));
+
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(20, corridorLen),
+    new THREE.MeshStandardMaterial({ map: grass, color: 0x3cb371, roughness: 0.8, metalness: 0.2 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  scene.add(floor);
+
+  // Veggir
+  const wallHeight = 12;
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+
+  const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(corridorLen, wallHeight), wallMat);
+  leftWall.position.set(-10, wallHeight / 2, 0);
+  leftWall.rotation.y = Math.PI / 2;
+  scene.add(leftWall);
+
+  const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(corridorLen, wallHeight), wallMat);
+  rightWall.position.set(10, wallHeight / 2, 0);
+  rightWall.rotation.y = -Math.PI / 2;
+  scene.add(rightWall);
+
+  // Myndafletir
+  const imageWidth = 14;
+  const imageGeom  = new THREE.PlaneGeometry(imageWidth, wallHeight);
+  const startZ = -((COUNT - 1) * SPACING) / 2;
+
+  // Forskölun: hleður í <canvas> og býr til CanvasTexture (sparar GPU-minni á síma)
+  async function loadScaledTexture(path, maxSize = 1024) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const maxDim = Math.max(img.width, img.height);
+        const scale = maxDim > maxSize ? (maxSize / maxDim) : 1;
+        const w = Math.max(1, Math.round(img.width  * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.generateMipmaps = false;
+        tex.minFilter = THREE.LinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        if (THREE?.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+        resolve(tex);
+      };
+      img.onerror = reject;
+      img.src = path;
+    });
+  }
+
+  function addImage(i) {
+    const file = `mynd${i + 1}.jpeg`;
+    (async () => {
+      try {
+        const maxTex = IS_MOBILE ? 1024 : 2048;
+        const texture = await loadScaledTexture(`./myndasafn/${file}`, maxTex);
+
+        const mat = new THREE.MeshBasicMaterial({
+          map: texture,
+          side: THREE.FrontSide,
+          transparent: true
+        });
+
+        const mesh = new THREE.Mesh(imageGeom, mat);
+        const z = startZ + i * SPACING;
+        const side = i % 2 === 0 ? -1 : 1;
+
+        mesh.position.set(side * 9.5, wallHeight / 2, z);
+        mesh.rotation.y = (side === -1) ?  Math.PI / 2 : -Math.PI / 2;
+
+        scene.add(mesh);
+      } catch (err) {
+        console.error(`Gat ekki hlaðið ./myndasafn/${file}`, err);
+      }
+    })();
+  }
+  for (let i = 0; i < COUNT; i++) addImage(i);
+
+  // Stýringar
+  let yaw = 0;
+  const ROT = 0.05, MOVE = 0.25;
   const SWIPE_ROT_MULT  = 6;    // hraðari snúningur á svæp
 const SWIPE_MOVE_MULT = 10;   // 10x lengra á svæp
 const SWIPE_THRESHOLD = 40;   // px þröskuldur
