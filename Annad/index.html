@@ -54,7 +54,7 @@
         const imageWidth = 14;
         const imageGeometry = new THREE.PlaneGeometry(imageWidth, wallHeight);
         const imageLoader = new THREE.TextureLoader();
-        const images = Array.from({length: 49}, (_, i) => `/mynd${i + 1}.jpeg`);
+        const images = Array.from({length: 49}, (_, i) => `/myndasafn/mynd${i + 1}.jpeg`);
 
         images.forEach((imagePath, index) => {
             const zPosition = -171.5 + (index * 7);
