@@ -186,12 +186,12 @@
     const dY = t.clientY - tY;
 
     if (Math.abs(dX) > Math.abs(dY)) {
-      if (dX > 40)  { yaw += ROT; tX = t.clientX; }
-      if (dX < -40) { yaw -= ROT; tX = t.clientX; }
+      if (dX > 5)  { yaw += ROT; tX = t.clientX; }
+      if (dX < -5) { yaw -= ROT; tX = t.clientX; }
     } else {
       const forward = new THREE.Vector3(Math.sin(-yaw), 0, Math.cos(-yaw));
-      if (dY > 10)  { camera.position.addScaledVector(forward, -MOVE); tY = t.clientY; }
-      if (dY < -10) { camera.position.addScaledVector(forward,  MOVE); tY = t.clientY; }
+      if (dY > 5)  { camera.position.addScaledVector(forward, -MOVE); tY = t.clientY; }
+      if (dY < -5) { camera.position.addScaledVector(forward,  MOVE); tY = t.clientY; }
     }
   }, { passive: false });
 
