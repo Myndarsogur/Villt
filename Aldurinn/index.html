@@ -8,6 +8,7 @@
     body {
       margin: 0;
       background-color: black;
+      background-image: url('Bakgrunnsmyndir/mynd1.jpg'); /* Eina bakgrunnsmyndin */
       background-size: cover;
       background-position: center;
       display: flex;
@@ -15,43 +16,6 @@
       justify-content: center;
       height: 100vh;
       overflow: hidden;
-    }
-    #background {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      background-size: cover;
-      background-position: center;
-      transition: opacity 1s ease-in-out; /* Fade effect */
-      opacity: 1; /* Start hidden */
-    }
-    #background.loaded {
-      opacity: 1; /* Show when loaded */
-    }
-    #floating-frame {
-      position: absolute;
-      width: 150px;
-      height: 150px;
-      z-index: 15;
-      border: 2px solid white;
-      background-size: cover;
-      background-position: center;
-      border-radius: 10px;
-    }
-    #fixed-frame {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      width: 150px;
-      height: 150px;
-      z-index: 15;
-      border: 2px solid white;
-      background-size: cover;
-      background-position: center;
-      border-radius: 10px;
     }
     img {
       max-width: 90vw;
@@ -78,67 +42,61 @@
 </head>
 <body>
 
-  <div id="background"></div>
-  <div id="floating-frame"></div>
-  <div id="fixed-frame"></div>
-  <audio id="player" autoplay loop></audio>
-  <img id="image" src="Adal/mynd1.png" alt="mynd">
+  <img id="image" src="Bakgrunnsmynd/mynd1.jpeg" alt="mynd">
+
+  <div id="text-display">Hleð texta...</div>
 
   <div class="click-zone left-zone" onclick="previousImage()"></div>
   <div class="click-zone right-zone" onclick="nextImage()"></div>
 
   <script>
-    const totalImages = 77;
+    const totalImages = 196;
     let currentImage = 1;
-
-    // Skilgreindu hópana og lögin
-    const songGroups = [
-      { start: 1, end: 10, song: "Login/My Song 11 - er thett_01.mp3" },
-      { start: 11, end: 20, song: "Login/My Song 11_01.mp3" },
-      { start: 21, end: 30, song: "Login/My Song 16_01.mp3" },
-      { start: 31, end: 40, song: "Login/My Song 23_01.mp3" },
-      { start: 41, end: 50, song: "Login/My Song 26_01.mp3" },
-      { start: 51, end: 60, song: "Login/My Song 27_01.mp3" },
-      { start: 61, end: 77, song: "Login/My Song 34_01.mp3" }
-    ];
-
-    const player = document.getElementById('player');
     const image = document.getElementById('image');
-    const background = document.getElementById('background');
-    const floatingFrame = document.getElementById('floating-frame');
-    const fixedFrame = document.getElementById('fixed-frame');
-    let currentGroup = null;
+    let isTransitioning = false; // Lás til að forðast tvöfaldar flettingar
 
-    function updateImage() {
-      image.src = `Adal/mynd${currentImage}.PNG`;
-      updateAudio();
-    }
+    console.log('Image element:', image); // Villuleit
 
-    function updateAudio() {
-      const group = songGroups.find(g => currentImage >= g.start && currentImage <= g.end);
-      if (group !== currentGroup) {
-        currentGroup = group;
-        player.src = group.song;
-        player.play();
+    function preloadNextImage(imageNumber) {
+      if (imageNumber <= totalImages) {
+        const img = new Image();
+        img.src = `Bakgrunnsmynd/mynd${imageNumber}.jpeg`;
+        console.log('Preloading image:', img.src); // Villuleit
       }
     }
 
+    function updateImage() {
+      isTransitioning = true;
+      image.src = `Bakgrunnsmynd/mynd${currentImage}.jpeg`;
+      console.log('Updating image to:', image.src); // Villuleit
+      preloadNextImage(currentImage + 1);
+      
+      // Bíða aðeins áður en leyfilegt er að fletta aftur
+      setTimeout(() => {
+        isTransitioning = false;
+        console.log('Transition complete'); // Villuleit
+      }, 150); // 150ms - getur verið lengra ef þörf er á meiri öryggi
+    }
+
     function nextImage() {
-      if (currentImage < totalImages) {
+      if (!isTransitioning && currentImage < totalImages) {
         currentImage++;
+        console.log('Next image:', currentImage); // Villuleit
         updateImage();
       }
     }
 
     function previousImage() {
-      if (currentImage > 1) {
+      if (!isTransitioning && currentImage > 1) {
         currentImage--;
+        console.log('Previous image:', currentImage); // Villuleit
         updateImage();
       }
     }
 
-    // Add keyboard navigation
+    // Lyklaborð
     document.addEventListener('keydown', (event) => {
+      console.log('Key pressed:', event.key); // Villuleit
       if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'Enter') {
         nextImage();
       } else if (event.key === 'ArrowLeft' || event.key === 'Backspace') {
@@ -146,72 +104,49 @@
       }
     });
 
-    // Cycle background images every 3 seconds
-    const totalBackgrounds = 75; // Assume Bakgrunnsmyndir group has 75 images
-    let currentBackground = 1;
+    // Snertismellur
+    document.querySelector('.right-zone').addEventListener('click', nextImage);
+    document.querySelector('.left-zone').addEventListener('click', previousImage);
 
-    function preloadImage(src, callback) {
-      const img = new Image();
-      img.onload = callback;
-      img.src = src;
-    }
+    async function fetchTextsFromKannski() {
+      try {
+        const response = await fetch("kannski.htm"); // Slóðin að kannski.htm
+        const html = await response.text();
 
-    function updateBackground() {
-      const nextBackgroundSrc = `Bakgrunnsmyndir/mynd${currentBackground}.jpeg`;
-      preloadImage(nextBackgroundSrc, () => {
-        background.style.backgroundImage = `url('${nextBackgroundSrc}')`;
-        background.classList.add('loaded'); // Apply fade-in effect
-      });
-      background.classList.remove('loaded'); // Prepare for next fade
-      currentBackground = currentBackground < totalBackgrounds ? currentBackground + 1 : 1;
-    }
+        // Greinir HTML og finnur texta
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
 
-    setInterval(updateBackground, 3000);
+        // Velur alla <p> texta
+        texts = Array.from(doc.querySelectorAll("p"))
+          .map(p => p.textContent.trim())
+          .filter(text => text.length > 0); // Fjarlægir tóma texta
 
-    // Initialize the first background
-    updateBackground();
-
-    // Floating frame logic
-    let currentFloatingImage = 1;
-
-    function updateFloatingFrame() {
-      floatingFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFloatingImage}.jpeg')`;
-      currentFloatingImage = currentFloatingImage < totalBackgrounds ? currentFloatingImage + 1 : 1;
-
-      // Randomize position
-      const x = Math.random() * (window.innerWidth - 150);
-      const y = Math.random() * (window.innerHeight - 150);
-      floatingFrame.style.transform = `translate(${x}px, ${y}px)`;
-    }
-
-    setInterval(updateFloatingFrame, 3000);
-
-    // Initialize the floating frame
-    updateFloatingFrame();
-
-    // Fixed frame logic
-    let currentFixedImage = 1;
-
-    function updateFixedFrame() {
-      fixedFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFixedImage}.jpeg')`;
-      currentFixedImage = currentFixedImage < totalBackgrounds ? currentFixedImage + 1 : 1;
-    }
-
-    // Cycle images in the fixed frame every 3 seconds
-    setInterval(updateFixedFrame, 3000);
-
-    // Initialize the fixed frame
-    updateFixedFrame();
-
-    // Byrja með fyrstu mynd og lag
-    updateImage();
-
-    // Add user interaction to start audio
-    document.addEventListener('click', () => {
-      if (player.tagName === 'AUDIO') {
-        player.play();
+        if (texts.length === 0) {
+          document.querySelector("#text-display").textContent = "Engir textar fundust.";
+        } else {
+          displayRandomText(); // Byrjar með fyrsta texta
+        }
+      } catch (error) {
+        console.error("Villa við að sækja texta úr kannski.htm:", error);
+        document.querySelector("#text-display").textContent = "Villa við að sækja texta.";
       }
-    }, { once: true }); // Ensure this runs only once
+    }
+
+    function displayRandomText() {
+      if (texts.length === 0) return;
+      const randomIndex = Math.floor(Math.random() * texts.length);
+      document.querySelector("#text-display").textContent = texts[randomIndex];
+    }
+
+    // Upphafsstilling
+    document.addEventListener("DOMContentLoaded", async () => {
+      await fetchTextsFromKannski(); // Sækir texta úr kannski.htm
+    });
+
+    const texts = Array.from(doc.querySelectorAll("p"))
+      .map(p => p.textContent.trim())
+      .filter(text => text.length > 0);
   </script>
 
 </body>
