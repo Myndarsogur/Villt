@@ -190,8 +190,8 @@
       if (dX < -40) { yaw -= ROT; tX = t.clientX; }
     } else {
       const forward = new THREE.Vector3(Math.sin(-yaw), 0, Math.cos(-yaw));
-      if (dY > 100)  { camera.position.addScaledVector(forward, -MOVE); tY = t.clientY; }
-      if (dY < -100) { camera.position.addScaledVector(forward,  MOVE); tY = t.clientY; }
+      if (dY > 10)  { camera.position.addScaledVector(forward, -MOVE); tY = t.clientY; }
+      if (dY < -10) { camera.position.addScaledVector(forward,  MOVE); tY = t.clientY; }
     }
   }, { passive: false });
 
