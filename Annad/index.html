@@ -183,44 +183,49 @@
     src.start(0);
   }
 
-  // Snertistýringar: halda = labba, stroka = snúa
-  addEventListener('touchstart', (ev) => {
-    ev.preventDefault();
-    if (audioContext.state === 'suspended') audioContext.resume().then(loadAndPlaySound);
-    else loadAndPlaySound();
+// Snertistýringar: halda = labba, stroka = snúa (má gera bæði í einu)
+addEventListener('touchstart', (ev) => {
+  ev.preventDefault();
+  if (audioContext.state === 'suspended') audioContext.resume().then(loadAndPlaySound);
+  else loadAndPlaySound();
 
-    const t = ev.touches[0];
-    tX = t.clientX; tY = t.clientY;
+  const t = ev.touches[0];
+  tX = t.clientX; tY = t.clientY;
 
-    isTouching = true;
-    isRotating = false;
-    holdWalk   = true;   // halda -> labba
-  }, { passive: false });
+  isTouching = true;
+  isRotating = false;
+  holdWalk   = true;   // halda -> labba
+}, { passive: false });
 
-  addEventListener('touchmove', (ev) => {
-    ev.preventDefault();
-    if (!isTouching) return;
+addEventListener('touchmove', (ev) => {
+  ev.preventDefault();
+  if (!isTouching) return;
 
-    const t = ev.touches[0];
-    const dX = t.clientX - tX;
-    const dY = t.clientY - tY;
+  const t = ev.touches[0];
+  const dX = t.clientX - tX;
+  const dY = t.clientY - tY;
 
-    // ef lárétt hreyfing fer yfir þröskuld => telst stroka (snúum, labb stoppar)
-    if (!isRotating && Math.abs(dX) > ROTATE_START_PX && Math.abs(dX) > Math.abs(dY)) {
-      isRotating = true;
-      holdWalk   = false;
-    }
+  // ef lárétt hreyfing fer yfir þröskuld => telst stroka (snúum)
+  if (!isRotating && Math.abs(dX) > ROTATE_START_PX && Math.abs(dX) > Math.abs(dY)) {
+    isRotating = true;
+    // ATH: við slökkvum EKKI á holdWalk hér, svo þú getur labbað og snúið í einu
+  }
 
-    if (isRotating) {
-      // snúa í hlutfalli við skjábreidd (slétt)
-      const nx = dX / window.innerWidth;
-      yaw -= nx * ROT_TOUCH_GAIN;
-      camera.rotation.y = yaw;
-      tX = t.clientX; // mangum strokið
-    } else {
-      // engin sérstök aðgerð hér; holdWalk heldur áfram að vera true
-    }
-  }, { passive: false });
+  if (isRotating) {
+    const nx = dX / window.innerWidth;
+    yaw -= nx * ROT_TOUCH_GAIN;
+    camera.rotation.y = yaw;
+    tX = t.clientX; // halda áfram að manga
+  }
+}, { passive: false });
+
+addEventListener('touchend', (ev) => {
+  ev.preventDefault();
+  isTouching = false;
+  isRotating = false;
+  holdWalk   = false;
+}, { passive: false });
+
 
   addEventListener('touchend', (ev) => {
     ev.preventDefault();
