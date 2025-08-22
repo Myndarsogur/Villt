@@ -42,6 +42,121 @@
 </head>
 <body>
 
+  <img id="image" src="Bakgrunnsmyndir/mynd1.jpeg" alt="mynd">
+
+  <div id="text-display">Hleð texta...</div>
+
+  <div class="click-zone left-zone" onclick="previousImage()"></div>
+  <div class="click-zone right-zone" onclick="nextImage()"></div>
+
+  <script>
+    const totalImages = 196;
+    let currentImage = 1;
+    const image = document.getElementById('image');
+    let isTransitioning = false; // Lás til að forðast tvöfaldar flettingar
+
+    console.log('Image element:', image); // Villuleit
+
+    function preloadNextImage(imageNumber) {
+      if (imageNumber <= totalImages) {
+        const img = new Image();
+        img.src = `Bakgrunnsmyndir/mynd${imageNumber}.jpeg`;
+        console.log('Preloading image:', img.src); // Villuleit
+      }
+    }
+
+    function updateImage() {
+      isTransitioning = true;
+      image.src = `Bakgrunnsmyndir/mynd${currentImage}.jpeg`;
+      console.log('Updating image to:', image.src); // Villuleit
+      preloadNextImage(currentImage + 1);
+      
+      // Bíða aðeins áður en leyfilegt er að fletta aftur
+      setTimeout(() => {
+        isTransitioning = false;
+        console.log('Transition complete'); // Villuleit
+      }, 150); // 150ms - getur verið lengra ef þörf er á meiri öryggi
+    }
+
+    function nextImage() {
+      if (!isTransitioning && currentImage < totalImages) {
+        currentImage++;
+        console.log('Next image:', currentImage); // Villuleit
+        updateImage();
+      }
+    }
+
+    function previousImage() {
+      if (!isTransitioning && currentImage > 1) {
+        currentImage--;
+        console.log('Previous image:', currentImage); // Villuleit
+        updateImage();
+      }
+    }
+
+    // Lyklaborð
+    document.addEventListener('keydown', (event) => {
+      console.log('Key pressed:', event.key); // Villuleit
+      if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'Enter') {
+        nextImage();
+      } else if (event.key === 'ArrowLeft' || event.key === 'Backspace') {
+        previousImage();
+      }
+    });
+
+    // Snertismellur
+    document.querySelector('.right-zone').addEventListener('click', nextImage);
+    document.querySelector('.left-zone').addEventListener('click', previousImage);
+
+    async function fetchTextsFromKannski() {
+      try {
+        const response = await fetch("kannski.htm"); // Slóðin að kannski.htm
+        const html = await response.text();
+
+        // Greinir HTML og finnur texta
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        // Velur alla <p> texta
+        texts = Array.from(doc.querySelectorAll("p"))
+          .map(p => p.textContent.trim())
+          .filter(text => text.length > 0); // Fjarlægir tóma texta
+
+        if (texts.length === 0) {
+          document.querySelector("#text-display").textContent = "Engir textar fundust.";
+        } else {
+          displayRandomText(); // Byrjar með fyrsta texta
+        }
+      } catch (error) {
+        console.error("Villa við að sækja texta úr kannski.htm:", error);
+        document.querySelector("#text-display").textContent = "Villa við að sækja texta.";
+      }
+    }
+
+    function displayRandomText() {
+      if (texts.length === 0) return;
+      const randomIndex = Math.floor(Math.random() * texts.length);
+      document.querySelector("#text-display").textContent = texts[randomIndex];
+    }
+
+    // Upphafsstilling
+    document.addEventListener("DOMContentLoaded", async () => {
+      await fetchTextsFromKannski(); // Sækir texta úr kannski.htm
+    });
+
+    const texts = Array.from(doc.querySelectorAll("p"))
+      .map(p => p.textContent.trim())
+      .filter(text => text.length > 0);
+  </script>
+
+</body>
+</html>
+      right: 0;
+    }
+  </style>
+</head>
+<body>
+
   <img id="image" src="Bakgrunnsmynd/mynd1.jpeg" alt="mynd">
 
   <div id="text-display">Hleð texta...</div>
