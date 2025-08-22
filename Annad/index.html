@@ -1,39 +1,252 @@
 <!DOCTYPE html>
 <html lang="is">
 <head>
-    <meta charset="UTF-8">
-    <title>3D Gangur</title>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        canvas { display: block; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>3D Gangur</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    canvas { display: block; }
+  </style>
 </head>
 <body>
-    <script type="module">
-        import * as THREE from 'https://unpkg.com/three@0.160.1/build/three.module.js';
+<script type="module">
+  import * as THREE from 'https://unpkg.com/three@0.160.1/build/three.module.js';
 
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB);
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+  // --- Sena, myndavél, teiknari ---
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87CEEB);
+  const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 2000);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(innerWidth, innerHeight);
+  document.body.appendChild(renderer.domElement);
 
-        const light = new THREE.AmbientLight(0xffffff, 0.8);
-        scene.add(light);
+  // --- Lýsing ---
+  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
 
-        const textureLoader = new THREE.TextureLoader();
-        const grassTexture = textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
-        grassTexture.wrapS = THREE.RepeatWrapping;
-        grassTexture.wrapT = THREE.RepeatWrapping;
-        grassTexture.repeat.set(20, 100);
+  // --- Stillingar gangsins/mynda ---
+  const COUNT   = 75;   // fjöldi mynda
+  const SPACING = 7;    // bil á milli mynda eftir Z
+  const MARGIN  = 40;   // auka til að skera ekki endana
+  const corridorLen = COUNT * SPACING + MARGIN;
 
-        const floorGeometry = new THREE.PlaneGeometry(20, 500);
-        const floorMaterial = new THREE.MeshStandardMaterial({ 
-            map: grassTexture,
-            color: 0x3cb371,
-            roughness: 0.8,
-            metalness: 0.2
+  // --- Grass á gólfi ---
+  const textureLoader = new THREE.TextureLoader();
+  const grassTexture = textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
+  grassTexture.wrapS = THREE.RepeatWrapping;
+  grassTexture.wrapT = THREE.RepeatWrapping;
+  grassTexture.repeat.set(2, Math.max(8, Math.floor(corridorLen / 25)));
+
+  const floorGeometry = new THREE.PlaneGeometry(20, corridorLen);
+  const floorMaterial = new THREE.MeshStandardMaterial({
+    map: grassTexture, color: 0x3cb371, roughness: 0.8, metalness: 0.2
+  });
+  const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.rotation.x = -Math.PI / 2;
+  scene.add(floor);
+
+  // --- Veggir ---
+  const wallHeight = 12;
+  const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+
+  const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(corridorLen, wallHeight), wallMaterial);
+  leftWall.position.set(-10, wallHeight / 2, 0);
+  leftWall.rotation.y = Math.PI / 2;
+  scene.add(leftWall);
+
+  const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(corridorLen, wallHeight), wallMaterial);
+  rightWall.position.set(10, wallHeight / 2, 0);
+  rightWall.rotation.y = -Math.PI / 2;
+  scene.add(rightWall);
+
+  // --- Myndir (úr ./myndasafn/mynd1.jpeg ... mynd75.jpeg) ---
+  const imageWidth = 14;
+  const imageGeometry = new THREE.PlaneGeometry(imageWidth, wallHeight);
+
+  // notum setPath til að tryggja hlutlægar slóðir á vefnum
+  const imageLoader = new THREE.TextureLoader();
+  imageLoader.setPath('./myndasafn/');
+  imageLoader.crossOrigin = 'anonymous';
+
+  const startZ = -((COUNT - 1) * SPACING) / 2;
+
+  function addImage(index) {
+    const filename = `mynd${index + 1}.jpeg`;
+    imageLoader.load(
+      filename,
+      (texture) => {
+        // gæði + rétt litapláss
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy?.() || 1;
+        if (THREE?.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+
+        const imageMaterial = new THREE.MeshBasicMaterial({
+          map: texture, side: THREE.DoubleSide, transparent: true
+        });
+        const imageMesh = new THREE.Mesh(imageGeometry, imageMaterial);
+
+        const zPosition = startZ + index * SPACING;
+        const side = index % 2 === 0 ? -1 : 1;
+        imageMesh.position.set(side * 9.5, wallHeight / 2, zPosition);
+        imageMesh.rotation.y = side * Math.PI / 2;
+
+        scene.add(imageMesh);
+      },
+      undefined,
+      (error) => {
+        console.error(`Error loading ./myndasafn/${filename}:`, error);
+        // sýna stutt skilaboð svo það sjáist strax hvaða skrá vantar
+        const note = document.createElement('div');
+        note.textContent = `Vantar: ${filename}`;
+        note.style.cssText='position:fixed;bottom:8px;left:8px;background:#000c;color:#fff;padding:6px 8px;font:12px monospace;border-radius:6px';
+        document.body.appendChild(note);
+        setTimeout(() => note.remove(), 3500);
+      }
+    );
+  }
+  for (let i = 0; i < COUNT; i++) addImage(i);
+
+  // --- Myndavél: staða og hreyfing ---
+  camera.position.set(0, 6, 30);
+  let cameraRotation = 0;
+  const rotationSpeed = 0.05;
+  const moveSpeed = 0.2;
+
+  const keysPressed = {};
+  addEventListener('keydown', (e) => keysPressed[e.key] = true);
+  addEventListener('keyup',   (e) => keysPressed[e.key] = false);
+
+  function moveCamera() {
+    if (keysPressed['ArrowLeft'])  cameraRotation += rotationSpeed;
+    if (keysPressed['ArrowRight']) cameraRotation -= rotationSpeed;
+    camera.rotation.y = cameraRotation;
+    if (keysPressed['ArrowUp'])    camera.position.z -= moveSpeed;
+    if (keysPressed['ArrowDown'])  camera.position.z += moveSpeed;
+
+    // halda myndavélinni innan gangs
+    const halfLen = corridorLen / 2 - 5;
+    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -4, 4);
+    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -halfLen, halfLen);
+  }
+
+  // --- Hljóð ---
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  let touchSound = null, touchSoundLoaded = false;
+
+  function loadAndPlaySound() {
+    if (touchSoundLoaded) { playTouchSound(); return; }
+    fetch('./thu.mp3')
+      .then(r => r.arrayBuffer())
+      .then(buf => audioContext.decodeAudioData(buf))
+      .then(decoded => { touchSound = decoded; touchSoundLoaded = true; playTouchSound(); })
+      .catch(err => console.error('Error loading audio:', err));
+  }
+  function playTouchSound() {
+    if (!touchSound) return;
+    const src = audioContext.createBufferSource();
+    src.buffer = touchSound;
+    src.connect(audioContext.destination);
+    src.start(0);
+  }
+
+  // --- Snertistýringar ---
+  let touchStartX = 0, touchStartY = 0, isSwiping = false;
+  addEventListener('touchstart', (event) => {
+    if (audioContext.state === 'suspended') audioContext.resume().then(loadAndPlaySound);
+    else loadAndPlaySound();
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+    isSwiping = true;
+  });
+  addEventListener('touchmove', (event) => {
+    if (!isSwiping) return;
+    const x = event.touches[0].clientX, y = event.touches[0].clientY;
+    const deltaX = x - touchStartX, deltaY = y - touchStartY;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX > 50) cameraRotation += rotationSpeed;
+      else if (deltaX < -50) cameraRotation -= rotationSpeed;
+    } else {
+      if (deltaY > 50) camera.position.z -= moveSpeed;
+      else if (deltaY < -50) camera.position.z += moveSpeed;
+    }
+  });
+  addEventListener('touchend', () => { isSwiping = false; });
+
+  // --- Litasveiflur og ský ---
+  const skyColors = [0x404040,0x606060,0x808080,0xA0A0A0,0xC0C0C0,0xE0E0E0].map(c => new THREE.Color(c));
+  let currentColorIndex = 0, nextColorIndex = 1, colorTransitionTime = 0;
+  const colorChangeDuration = 4;
+
+  const groundColors = [0x2d5a27,0x3cb371,0x90ee90,0x98fb98,0x228b22,0x32cd32].map(c => new THREE.Color(c));
+  let groundColorIndex = 0, nextGroundIndex = 1, groundTransitionTime = 0;
+  const groundChangeDuration = 4;
+
+  function createClouds() {
+    const cloudGeometry = new THREE.BufferGeometry();
+    const cloudMaterial = new THREE.PointsMaterial({
+      size: 4, transparent: true, opacity: 0.6,
+      color: 0xffffff, blending: THREE.AdditiveBlending, sizeAttenuation: true
+    });
+    const pts = [];
+    for (let i = 0; i < 500; i++) {
+      const x = Math.random() * 400 - 200;
+      const y = 20 + Math.random() * 10;
+      const z = Math.random() * 400 - 200;
+      pts.push(x, y, z);
+    }
+    cloudGeometry.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    const clouds = new THREE.Points(cloudGeometry, cloudMaterial);
+    scene.add(clouds);
+    return clouds;
+  }
+  const clouds = createClouds();
+
+  // --- Teiknilykkja ---
+  function animate() {
+    requestAnimationFrame(animate);
+
+    colorTransitionTime += 0.016;
+    if (colorTransitionTime >= colorChangeDuration) {
+      colorTransitionTime = 0;
+      currentColorIndex = nextColorIndex;
+      nextColorIndex = (nextColorIndex + 1) % skyColors.length;
+    }
+    groundTransitionTime += 0.016;
+    if (groundTransitionTime >= groundChangeDuration) {
+      groundTransitionTime = 0;
+      groundColorIndex = nextGroundIndex;
+      nextGroundIndex = (nextGroundIndex + 1) % groundColors.length;
+    }
+
+    scene.background = new THREE.Color().lerpColors(
+      skyColors[currentColorIndex], skyColors[nextColorIndex],
+      colorTransitionTime / colorChangeDuration
+    );
+    floor.material.color.lerpColors(
+      groundColors[groundColorIndex], groundColors[nextGroundIndex],
+      groundTransitionTime / groundChangeDuration
+    );
+
+    const positions = clouds.geometry.attributes.position.array;
+    for (let i = 0; i < positions.length; i += 3) {
+      positions[i] += 0.01;
+      if (positions[i] > 200) positions[i] = -200;
+    }
+    clouds.geometry.attributes.position.needsUpdate = true;
+
+    moveCamera();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // --- Resize ---
+  addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+</script>
+</body>
+</html>
         });
         const floor = new THREE.Mesh(floorGeometry, floorMaterial);
         floor.rotation.x = -Math.PI / 2;
