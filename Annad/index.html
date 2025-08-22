@@ -36,6 +36,9 @@
   const MARGIN  = 40;
   const corridorLen = COUNT * SPACING + MARGIN;
 
+  // Læsa í miðju (engin hliðarfærsla)
+  const LOCK_X = 0;
+
   // Gólf
   const texLoader = new THREE.TextureLoader();
   const grass = texLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
@@ -130,21 +133,34 @@
   // Stýringar
   let yaw = 0;
   const ROT = 0.05, MOVE = 0.25;
+
+  // Snertistýringar: halda = labba, stroka = snúa (engin hliðarfærsla)
+  const HOLD_SPEED      = 4.0;  // m/s fram (stilla eftir þörf)
+  const ROT_TOUCH_GAIN  = 4.5;  // snúningsnæmni á stroki
+  const ROTATE_START_PX = 8;    // px þröskuldur til að telja lárétt stroku sem snúning
+
+  let isTouching = false;
+  let isRotating = false;
+  let holdWalk   = false;
+  let tX = 0, tY = 0;
+
   const keys = {};
   addEventListener('keydown', (e) => keys[e.key] = true);
   addEventListener('keyup',   (e) => keys[e.key] = false);
 
   function updateControls() {
+    // snúningur með örvum
     if (keys['ArrowLeft'])  yaw += ROT;
     if (keys['ArrowRight']) yaw -= ROT;
     camera.rotation.y = yaw;
 
-    const forward = new THREE.Vector3(Math.sin(-yaw), 0, Math.cos(-yaw));
-    if (keys['ArrowUp'])   camera.position.addScaledVector(forward, -MOVE);
-    if (keys['ArrowDown']) camera.position.addScaledVector(forward,  MOVE);
+    // bara fram/aftur eftir Z (engin X-hreyfing)
+    if (keys['ArrowUp'])   camera.position.z -= MOVE;
+    if (keys['ArrowDown']) camera.position.z += MOVE;
 
+    // halda í miðju og innan marka
     const half = corridorLen / 2 - 5;
-    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -4, 4);
+    camera.position.x = LOCK_X;
     camera.position.z = THREE.MathUtils.clamp(camera.position.z, -half, half);
   }
 
@@ -167,35 +183,51 @@
     src.start(0);
   }
 
-  // Snertistýringar
-  let tX = 0, tY = 0, swiping = false;
+  // Snertistýringar: halda = labba, stroka = snúa
   addEventListener('touchstart', (ev) => {
     ev.preventDefault();
     if (audioContext.state === 'suspended') audioContext.resume().then(loadAndPlaySound);
     else loadAndPlaySound();
+
     const t = ev.touches[0];
     tX = t.clientX; tY = t.clientY;
-    swiping = true;
+
+    isTouching = true;
+    isRotating = false;
+    holdWalk   = true;   // halda -> labba
   }, { passive: false });
 
   addEventListener('touchmove', (ev) => {
     ev.preventDefault();
-    if (!swiping) return;
+    if (!isTouching) return;
+
     const t = ev.touches[0];
     const dX = t.clientX - tX;
     const dY = t.clientY - tY;
 
-    if (Math.abs(dX) > Math.abs(dY)) {
-      if (dX > 0)  { yaw += ROT; tX = t.clientX; }
-      if (dX < 0) { yaw -= ROT; tX = t.clientX; }
+    // ef lárétt hreyfing fer yfir þröskuld => telst stroka (snúum, labb stoppar)
+    if (!isRotating && Math.abs(dX) > ROTATE_START_PX && Math.abs(dX) > Math.abs(dY)) {
+      isRotating = true;
+      holdWalk   = false;
+    }
+
+    if (isRotating) {
+      // snúa í hlutfalli við skjábreidd (slétt)
+      const nx = dX / window.innerWidth;
+      yaw -= nx * ROT_TOUCH_GAIN;
+      camera.rotation.y = yaw;
+      tX = t.clientX; // mangum strokið
     } else {
-      const forward = new THREE.Vector3(Math.sin(-yaw), 0, Math.cos(-yaw));
-      if (dY > 5)  { camera.position.addScaledVector(forward, -MOVE); tY = t.clientY; }
-      if (dY < -5) { camera.position.addScaledVector(forward,  MOVE); tY = t.clientY; }
+      // engin sérstök aðgerð hér; holdWalk heldur áfram að vera true
     }
   }, { passive: false });
 
-  addEventListener('touchend', (ev) => { ev.preventDefault(); swiping = false; }, { passive: false });
+  addEventListener('touchend', (ev) => {
+    ev.preventDefault();
+    isTouching = false;
+    isRotating = false;
+    holdWalk   = false;
+  }, { passive: false });
 
   // Ský og litabreytingar
   const skyColors = [0x404040,0x606060,0x808080,0xA0A0A0,0xC0C0C0,0xE0E0E0].map(c => new THREE.Color(c));
@@ -216,11 +248,18 @@
   }
   const clouds = createClouds();
 
+  // delta-time fyrir jöfnu hreyfingu
+  let lastTime = performance.now();
+
   function animate() {
     requestAnimationFrame(animate);
 
-    skyT += 0.016; if (skyT >= skyDur) { skyT = 0; skyI = skyNext; skyNext = (skyNext + 1) % skyColors.length; }
-    gT   += 0.016; if (gT   >= gDur)   { gT   = 0; gI   = gNext; gNext   = (gNext   + 1) % groundColors.length; }
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - lastTime) / 1000); // hámark 50ms
+    lastTime = now;
+
+    skyT += dt; if (skyT >= skyDur) { skyT = 0; skyI = skyNext; skyNext = (skyNext + 1) % skyColors.length; }
+    gT   += dt; if (gT   >= gDur)   { gT   = 0; gI   = gNext;   gNext   = (gNext   + 1) % groundColors.length; }
 
     scene.background = new THREE.Color().lerpColors(skyColors[skyI], skyColors[skyNext], skyT / skyDur);
     floor.material.color.lerpColors(groundColors[gI], groundColors[gNext], gT / gDur);
@@ -230,6 +269,18 @@
     clouds.geometry.attributes.position.needsUpdate = true;
 
     updateControls();
+
+    // HALDA = LABBA eftir Z í þá átt sem horft er (engin X-hreyfing)
+    if (holdWalk) {
+      const forwardZ = Math.cos(-yaw); // +1 = út, -1 = inn
+      camera.position.z += (-HOLD_SPEED * forwardZ) * dt;
+    }
+
+    // halda í miðju og innan marka (öryggisnet)
+    const half = corridorLen / 2 - 5;
+    camera.position.x = LOCK_X;
+    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -half, half);
+
     renderer.render(scene, camera);
   }
   animate();
@@ -246,6 +297,4 @@
 </script>
 </body>
 </html>
-
-
 
