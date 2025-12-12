@@ -64,7 +64,7 @@
 </head>
 <body>
   <audio id="fractal-audio" loop preload="auto" style="display:none">
-    <source src="lag1.mp3" type="audio/mpeg">
+    <source src="lagid.mp3" type="audio/mpeg">
   </audio>
   <div id="hud" style="display:none"></div>
   <div id="prompt" style="display:none"></div>
@@ -113,6 +113,54 @@
       touchStartPos = null;
       resetTouch();
     });
+
+    // Hljóð (þú getur bætt wind.mp3, birds.mp3, footsteps.mp3, bleat.mp3 í sömu möppu)
+    let audioInitiated = false;
+    let ambientWind = null;
+    let ambientBirds = null;
+    let footstepAudio = null;
+    let bleatAudio = null;
+    let bleatTimer = 0;
+    let footstepActive = false;
+
+    function createAudio(src, loop = false, volume = 1) {
+      const a = new Audio(src);
+      a.loop = loop;
+      a.preload = 'auto';
+      a.volume = volume;
+      return a;
+    }
+
+    function ensureAudio() {
+      if (audioInitiated) return;
+      audioInitiated = true;
+      try {
+        ambientWind = createAudio('wind.mp3', true, 0.25);
+        ambientWind.play().catch(() => {});
+      } catch (e) {}
+      try {
+        ambientBirds = createAudio('birds.mp3', true, 0.2);
+        ambientBirds.play().catch(() => {});
+      } catch (e) {}
+      try {
+        footstepAudio = createAudio('footsteps.mp3', true, 0.35);
+      } catch (e) {}
+      try {
+        bleatAudio = createAudio('bleat.mp3', false, 0.4);
+      } catch (e) {}
+    }
+
+    function setFootsteps(active) {
+      if (!footstepAudio) return;
+      if (active && !footstepActive) {
+        footstepActive = true;
+        footstepAudio.currentTime = 0;
+        footstepAudio.play().catch(() => {});
+      } else if (!active && footstepActive) {
+        footstepActive = false;
+        footstepAudio.pause();
+      }
+    }
 
     // Ljós
     const hemi = new THREE.HemisphereLight(0xffffff, 0x888844, 0.9);
@@ -602,6 +650,10 @@
       const left = (keys['ArrowLeft'] || keys['KeyA']) || (touchDir.x < -0.2);
       const right = (keys['ArrowRight'] || keys['KeyD']) || (touchDir.x > 0.2);
 
+      const moving = forward || backward || left || right;
+      if (moving) ensureAudio();
+      setFootsteps(moving);
+
       if (left && !right) yaw += rotSpeed * dt;
       if (right && !left) yaw -= rotSpeed * dt;
 
@@ -734,6 +786,18 @@
       const now = performance.now();
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
+
+      // Slembijarm af og til
+      if (bleatAudio && audioInitiated) {
+        bleatTimer -= dt;
+        if (bleatTimer <= 0) {
+          if (Math.random() < 0.2) {
+            bleatAudio.currentTime = 0;
+            bleatAudio.play().catch(() => {});
+          }
+          bleatTimer = 8 + Math.random() * 16;
+        }
+      }
 
       if (!inFractal) {
         updateMovement(dt);

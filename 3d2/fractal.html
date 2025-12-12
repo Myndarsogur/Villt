@@ -20,6 +20,21 @@
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
+    // Hljóð
+    let music = null;
+    let audioReady = false;
+    function initAudio() {
+      if (audioReady) return;
+      audioReady = true;
+      try {
+        music = new Audio('lagid.mp3');
+        music.loop = true;
+        music.preload = 'auto';
+        music.volume = 0.7;
+        music.play().catch(() => {});
+      } catch (e) {}
+    }
+
     const uniforms = {
       u_time: { value: 0 },
       u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
@@ -170,11 +185,16 @@
     const keys = {};
     window.addEventListener('keydown', (e) => { keys[e.code] = true; });
     window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+    window.addEventListener('mousedown', initAudio);
+    window.addEventListener('touchstart', () => { initAudio(); touchActive = true; }, { passive: true });
+    window.addEventListener('touchend', () => { touchActive = false; });
 
     let depth = 0;
     let angle = 0;
     const moveSpeed = 2;
     const turnSpeed = 1.6;
+    let touchActive = false;
+    let lastTouch = { x: 0.5, y: 0.5 };
 
     let lastTime = performance.now();
     function animate() {
@@ -183,7 +203,7 @@
       lastTime = now;
 
       // update controls
-      const forward = keys['ArrowUp'] || keys['KeyW'];
+      const forward = keys['ArrowUp'] || keys['KeyW'] || touchActive;
       const back = keys['ArrowDown'] || keys['KeyS'];
       const left = keys['ArrowLeft'] || keys['KeyA'];
       const right = keys['ArrowRight'] || keys['KeyD'];
@@ -192,6 +212,10 @@
       if (back && !forward) depth = Math.max(0.0, depth - moveSpeed * dt * 0.6);
       if (left && !right) angle += turnSpeed * dt;
       if (right && !left) angle -= turnSpeed * dt;
+      if (touchActive) {
+        const turn = (lastTouch.x - 0.5) * 2.0;
+        angle += turn * turnSpeed * dt;
+      }
 
       uniforms.u_depth.value = depth;
       uniforms.u_angle.value = angle;
@@ -214,6 +238,7 @@
       if (e.touches.length > 0) {
         const t = e.touches[0];
         uniforms.u_mouse.value.set(t.clientX / window.innerWidth, 1.0 - t.clientY / window.innerHeight);
+        lastTouch = { x: t.clientX / window.innerWidth, y: 1.0 - t.clientY / window.innerHeight };
       }
     }, { passive: true });
 
@@ -224,6 +249,7 @@
       if (e.code === 'KeyE' || e.code === 'Space') {
         window.location.href = 'index.html';
       }
+      initAudio();
     });
   </script>
 </body>
