@@ -6,6 +6,18 @@
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
+    #status {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-family: sans-serif;
+      font-size: 14px;
+      border-radius: 4px;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
@@ -13,32 +25,75 @@
     <source src="lagid.mp3" type="audio/mpeg" />
     Vafrinn þinn styður ekki hljóðafspilun.
   </audio>
+  <div id="status">Hleð líkan...</div>
 
   <script type="module">
     import * as THREE from './js/three.module.js';
     import { GLTFLoader } from './js/GLTFLoader.js';
     import { OrbitControls } from './js/OrbitControls.js';
   
+    const statusEl = document.getElementById('status');
+
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111111);
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 1.6, 3); // augnhæð
+    camera.position.set(0, 1.6, 5); // augnhæð aðeins aftar
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
     document.body.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.target.set(0, 1, 0);
 
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-    scene.add(light);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.9);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5, 10, 2);
+    scene.add(hemiLight, dirLight);
+
+    // Grunnmerki til að sjá hvort WebGL virkar áður en líkan hleðst
+    const grid = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+    const axes = new THREE.AxesHelper(1.5);
+    scene.add(grid, axes);
 
     const loader = new GLTFLoader();
     loader.load('mymodel.glb', function (gltf) {
-      scene.add(gltf.scene);
-    }, undefined, function (error) {
-      console.error(error);
+      const model = gltf.scene;
+      model.traverse((node) => {
+        if (node.isMesh) node.castShadow = node.receiveShadow = true;
+      });
+      scene.add(model);
+      loaded = true;
+      statusEl.textContent = 'Líkan hlaðið';
+      setTimeout(() => statusEl.style.display = 'none', 1200);
+    }, function (xhr) {
+      loaded = true; // progress means við erum að hlaða
+      if (xhr.total) {
+        const pct = Math.round((xhr.loaded / xhr.total) * 100);
+        statusEl.textContent = `Hleð líkan... ${pct}%`;
+      }
+    }, function (error) {
+      loaded = true;
+      console.error('Villa við að hlaða mymodel.glb', error);
+      statusEl.textContent = 'Tókst ekki að hlaða mymodel.glb';
+      // Setja einfalt form svo eitthvað sjáist
+      const fallbackGeo = new THREE.BoxGeometry(1, 1, 1);
+      const fallbackMat = new THREE.MeshStandardMaterial({ color: 0xff0066 });
+      const cube = new THREE.Mesh(fallbackGeo, fallbackMat);
+      cube.position.y = 1;
+      scene.add(cube);
     });
+
+    // Ef ekkert gerist (t.d. CORS/file://) sýna ábendingu eftir 5s
+    let loaded = false;
+    setTimeout(() => {
+      if (!loaded) {
+        statusEl.textContent = 'Engin hreyfing? Keyrðu í gegnum local server (t.d. python3 -m http.server)';
+      }
+    }, 5000);
 
     function animate() {
       requestAnimationFrame(animate);
