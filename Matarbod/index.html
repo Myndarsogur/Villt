@@ -59,10 +59,15 @@
       z-index: 9999; /* Setur pseudo-elementið efst í lagaskiptingunni */
       opacity: 1; /* Myndin verður ógegnsæ */
     }
+
+    #audio-player {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div id="text-display">Matarboð fyrir mömmu</div>
+  <audio id="audio-player" preload="auto" playsinline></audio>
 
   <script>
     const audioFolder = "converted";
@@ -70,52 +75,33 @@
     let songs = Array.from({ length: totalSongs }, (_, i) => `${audioFolder}/song${i + 1}.mp3`);
     let texts = Array.from({ length: totalSongs }, (_, i) => `Texti fyrir lag ${i + 1}`);
     const textDisplay = document.getElementById("text-display");
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    let audioBuffer = null;
-    let sourceNode = null;
+    const audioElement = document.getElementById("audio-player");
+    audioElement.loop = true;
+    audioElement.muted = false; // Tryggir að hljóðið sé í gegnum playback channel
     let currentSongIndex = 0;
     let started = false;
 
-    function loadAndPlaySong(index) {
+    function playSong(index) {
       const songUrl = songs[index];
+      currentSongIndex = index;
       console.log("Hleð lag:", songUrl);
-      fetch(songUrl)
-        .then(response => {
-          if (!response.ok) throw new Error(`Gat ekki sótt ${songUrl}`);
-          return response.arrayBuffer();
-        })
-        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
-        .then(buffer => {
-          audioBuffer = buffer;
-          playAudioBuffer();
-          textDisplay.textContent = texts[index] || "Enginn texti";
-        })
-        .catch(err => {
-          console.error("Gat ekki hlaðið lag:", err);
-          textDisplay.textContent = "Villa við spilun";
-        });
-    }
+      audioElement.src = songUrl;
+      textDisplay.textContent = texts[index] || "Enginn texti";
 
-    function playAudioBuffer() {
-      if (!audioBuffer) return;
-      if (sourceNode) sourceNode.stop();
-      sourceNode = audioContext.createBufferSource();
-      sourceNode.buffer = audioBuffer;
-      sourceNode.loop = true;
-      sourceNode.connect(audioContext.destination);
-      sourceNode.start(0);
+      audioElement.play().catch(err => {
+        console.error("Gat ekki spilað lag:", err);
+        textDisplay.textContent = "Villa við spilun";
+      });
     }
 
     function nextSong() {
       currentSongIndex = (currentSongIndex + 1) % totalSongs;
-      loadAndPlaySong(currentSongIndex);
-      textDisplay.textContent = texts[currentSongIndex] || "Enginn texti";
+      playSong(currentSongIndex);
     }
 
     function previousSong() {
       currentSongIndex = (currentSongIndex - 1 + totalSongs) % totalSongs;
-      loadAndPlaySong(currentSongIndex);
-      textDisplay.textContent = texts[currentSongIndex] || "Enginn texti";
+      playSong(currentSongIndex);
     }
 
     function shuffleArray(array) {
@@ -130,27 +116,26 @@
       shuffleArray(combined);
       songs = combined.map(item => item.song);
       texts = combined.map(item => item.text);
+      currentSongIndex = 0;
     }
 
     function startPlayback() {
       if (started) return;
       started = true;
 
-      audioContext.resume().then(() => {
-        fetch("kannski.htm")
-          .then(res => res.ok ? res.text() : Promise.reject("fann ekki kannski.htm"))
-          .then(txt => {
-            const lines = txt.split("\n").map(l => l.trim()).filter(l => l);
-            if (lines.length > 0) texts = lines;
-          })
-          .catch(err => {
-            console.log("Nota sjálfgefin texta:", err);
-          })
-          .finally(() => {
-            initializeSongsAndTexts();
-            loadAndPlaySong(currentSongIndex);
-          });
-      });
+      fetch("kannski.htm")
+        .then(res => res.ok ? res.text() : Promise.reject("fann ekki kannski.htm"))
+        .then(txt => {
+          const lines = txt.split("\n").map(l => l.trim()).filter(l => l);
+          if (lines.length > 0) texts = lines;
+        })
+        .catch(err => {
+          console.log("Nota sjálfgefin texta:", err);
+        })
+        .finally(() => {
+          initializeSongsAndTexts();
+          playSong(currentSongIndex);
+        });
     }
 
     // Byrja eða skipta um lag við smell
