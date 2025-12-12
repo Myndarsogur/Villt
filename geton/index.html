@@ -200,6 +200,12 @@ function showPreviewImage(index) {
     document.addEventListener('click', startMusicOnce);
     document.addEventListener('keydown', startMusicOnce);
     document.addEventListener('mousedown', startMusicOnce);
+
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'start-music') {
+        startMusicOnce();
+      }
+    });
   </script>
 </body>
 </html>
