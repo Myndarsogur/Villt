@@ -233,7 +233,12 @@
     let ambientBirds = null;
     let footstepAudio = null;
     let bleatAudio = null;
-    let riverAudio = null;
+    let audioCtx = null;
+    let riverGain = null;
+    let riverSource = null;
+    let riverBuffer = null;
+    let riverLoading = false;
+    let riverFailed = false;
     let bleatTimer = 0;
     let footstepActive = false;
 
@@ -243,6 +248,39 @@
       a.preload = 'auto';
       a.volume = volume;
       return a;
+    }
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const ACtx = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new ACtx();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+
+    async function initRiverAudio() {
+      if (riverSource || riverLoading || riverFailed) return;
+      riverLoading = true;
+      try {
+        const ctx = getAudioContext();
+        const res = await fetch('river.mp3');
+        const buf = await res.arrayBuffer();
+        riverBuffer = await ctx.decodeAudioData(buf);
+        riverSource = ctx.createBufferSource();
+        riverSource.buffer = riverBuffer;
+        riverSource.loop = true;
+        riverGain = ctx.createGain();
+        riverGain.gain.value = 0;
+        riverSource.connect(riverGain).connect(ctx.destination);
+        riverSource.start(0);
+      } catch (e) {
+        riverFailed = true; // avoid spamming fetch on repeat errors
+      } finally {
+        riverLoading = false;
+      }
     }
 
     function ensureAudio() {
@@ -262,10 +300,7 @@
       try {
         bleatAudio = createAudio('bleat.mp3', false, 0.4);
       } catch (e) {}
-      try {
-        riverAudio = createAudio('river.mp3', true, 0);
-        riverAudio.play().catch(() => {});
-      } catch (e) {}
+      initRiverAudio(); // kick off Web Audio river stream
     }
 
     function setFootsteps(active) {
@@ -1466,10 +1501,12 @@
     }
 
     function updateRiverSound(dt) {
-      if (!riverAudio) return;
-      if (audioInitiated && riverAudio.paused) {
-        riverAudio.play().catch(() => {});
+      if (riverFailed) return;
+      if (!riverSource || !riverGain) {
+        if (audioInitiated) initRiverAudio();
+        return;
       }
+      getAudioContext();
       const dx = camera.position.x - river.position.x;
       const dz = camera.position.z - river.position.z;
       const halfLen = 720 * 0.5;
@@ -1478,7 +1515,7 @@
       const t = near * along;
       const target = 0.45 * t;
       const lerp = Math.min(1, dt * 4);
-      riverAudio.volume += (target - riverAudio.volume) * lerp;
+      riverGain.gain.value += (target - riverGain.gain.value) * lerp;
     }
 
     function renderMinimap() {
