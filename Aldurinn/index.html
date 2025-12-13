@@ -82,7 +82,7 @@
   <div id="floating-frame"></div>
   <div id="fixed-frame"></div>
   <audio id="player" autoplay loop></audio>
-  <img id="image" src="Bakgrunnsmyndir/mynd1.png" alt="mynd">
+  <img id="image" src="Bakgrunnsmyndir/mynd1.avif" alt="mynd">
 
   <div class="click-zone left-zone" onclick="previousImage()"></div>
   <div class="click-zone right-zone" onclick="nextImage()"></div>
@@ -110,7 +110,7 @@
     let currentGroup = null;
 
     function updateImage() {
-      image.src = `Bakgrunnsmyndir/mynd${currentImage}.jpeg`;
+      image.src = `Bakgrunnsmyndir/mynd${currentImage}.avif`;
       updateAudio();
     }
 
@@ -157,7 +157,7 @@
     }
 
     function updateBackground() {
-      const nextBackgroundSrc = `Bakgrunnsmyndir/mynd${currentBackground}.jpeg`;
+      const nextBackgroundSrc = `Bakgrunnsmyndir/mynd${currentBackground}.avif`;
       preloadImage(nextBackgroundSrc, () => {
         background.style.backgroundImage = `url('${nextBackgroundSrc}')`;
         background.classList.add('loaded'); // Apply fade-in effect
@@ -175,7 +175,7 @@
     let currentFloatingImage = 1;
 
     function updateFloatingFrame() {
-      floatingFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFloatingImage}.jpeg')`;
+      floatingFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFloatingImage}.avif')`;
       currentFloatingImage = currentFloatingImage < totalBackgrounds ? currentFloatingImage + 1 : 1;
 
       // Randomize position
@@ -193,7 +193,7 @@
     let currentFixedImage = 1;
 
     function updateFixedFrame() {
-      fixedFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFixedImage}.jpeg')`;
+      fixedFrame.style.backgroundImage = `url('Bakgrunnsmyndir/mynd${currentFixedImage}.avif')`;
       currentFixedImage = currentFixedImage < totalBackgrounds ? currentFixedImage + 1 : 1;
     }
 

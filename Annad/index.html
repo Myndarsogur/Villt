@@ -7,32 +7,92 @@
   <style>
     html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; }
     canvas { width:100%; height:100%; display:block; touch-action:none; }
-    #hud{
-      position:fixed; left:12px; top:12px; z-index:10;
-      font:14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      color:#fff; background:rgba(0,0,0,.40); padding:10px 12px; border-radius:10px;
-      max-width:min(640px, calc(100vw - 24px));
+    #thu-wall{
+      position:fixed;
+      z-index:30;
+      overflow:hidden;
+      border-radius:6px;
+      width: 820px;
+      height: 480px;
+      right: 80px;
+      bottom: 90px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.5);
+      border: 3px solid rgba(150,160,180,0.35);
+      background:#000;
+      pointer-events:none;
+      opacity:0;
+      transition:opacity .2s ease;
     }
-    #hud b{display:block; margin-bottom:6px;}
-    #status { margin-top:6px; opacity:.9; white-space:pre-wrap; }
-    .bad { color:#ffb3b3; }
-    .ok { color:#b8ffb8; }
+    #thu-wall.visible{
+      opacity:1;
+      pointer-events:auto;
+    }
+    #thu-wall iframe{
+      width:100%;
+      height:100%;
+      border:0;
+      background:#000;
+    }
+    #myndband-wall{
+      position:fixed;
+      z-index:30;
+      overflow:hidden;
+      border-radius:6px;
+      width: min(92vw, 1100px);
+      aspect-ratio: 2 / 1; /* match 1280x640 content */
+      left: 30px;
+      bottom: 60px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.5);
+      border: 3px solid rgba(150,160,180,0.35);
+      background:#000;
+      pointer-events:none;
+      opacity:0;
+      transition:opacity .2s ease;
+    }
+    #myndband-wall.visible{
+      opacity:1;
+      pointer-events:auto;
+    }
+    #myndband-wall iframe{
+      width:100%;
+      height:100%;
+      border:0;
+      background:#000;
+    }
   </style>
 </head>
 <body>
-  <div id="hud">
-    <b>Stýring</b>
-    WASD / örvar: ganga · Drag (mús/touch): horfa
-    <div id="status">Ræsi…</div>
+  <canvas id="application-canvas"></canvas>
+  <div id="thu-wall">
+    <iframe id="thu-iframe" src="thu/index.html" title="Thu" allow="autoplay"></iframe>
+  </div>
+  <div id="myndband-wall">
+    <iframe id="myndband-iframe" src="Myndband2/index.html" title="Myndband" allow="autoplay"></iframe>
   </div>
 
-  <canvas id="application-canvas"></canvas>
-
   <script>
+    const thuWall = document.getElementById('thu-wall');
+    const thuIframe = document.getElementById('thu-iframe');
+    const myndWall = document.getElementById('myndband-wall');
+    const myndIframe = document.getElementById('myndband-iframe');
+    const showThu = () => thuWall.classList.add('visible');
+    const hideThu = () => thuWall.classList.remove('visible');
+    const showMynd = () => myndWall.classList.add('visible');
+    const hideMynd = () => myndWall.classList.remove('visible');
+    const notifyIframe = (iframe, type) => {
+      try {
+        iframe.contentWindow?.postMessage({ type }, '*');
+      } catch (_) {}
+    };
+    const notifyThuIframe = (type) => notifyIframe(thuIframe, type);
+    const notifyMyndIframe = (type) => notifyIframe(myndIframe, type);
+
     const statusEl = document.getElementById("status");
     const setStatus = (msg, cls="") => {
-      statusEl.className = cls;
-      statusEl.textContent = msg;
+      if (statusEl) {
+        statusEl.className = cls;
+        statusEl.textContent = msg;
+      }
       console.log(msg);
     };
 
@@ -362,15 +422,14 @@
 
       // Photo frames on the walls
       const photos = [
-        "mynd1.png","mynd2.png","mynd3.png","mynd4.png","mynd5.png","mynd6.png",
-        "mynd62.jpeg","mynd63.jpeg","mynd64.jpeg","mynd65.jpeg","mynd66.jpeg",
-        "mynd67.jpeg","mynd68.jpeg","mynd69.jpeg","mynd70.jpeg","mynd71.jpeg"
+        "mynd1.avif","mynd2.avif","mynd3.avif","mynd4.avif","mynd5.avif","mynd6.avif",
+        "mynd62.avif","mynd63.avif","mynd64.avif","mynd65.avif","mynd66.avif",
+        "mynd67.avif","mynd68.avif","mynd69.avif","mynd70.avif","mynd71.avif"
       ];
+      // Remove all art from the front wall; we'll only show the special frames there (bigger).
+      const thuSpot = { pos:new pc.Vec3(5, 3.5, -roomSize/2 + 0.16), yaw: 0 };
+      const myndSpot = { pos:new pc.Vec3(-10, 3.5, -roomSize/2 + 0.16), yaw: 0 };
       const photoSpots = [
-        // Front wall
-        { pos:new pc.Vec3(-15, 3.5, -roomSize/2 + 0.16), yaw:   0 },
-        { pos:new pc.Vec3(  0, 3.5, -roomSize/2 + 0.16), yaw:   0 },
-        { pos:new pc.Vec3( 15, 3.5, -roomSize/2 + 0.16), yaw:   0 },
         // Back wall
         { pos:new pc.Vec3(-15, 3.5, roomSize/2 - 0.16),  yaw: 180 },
         { pos:new pc.Vec3(  0, 3.5, roomSize/2 - 0.16),  yaw: 180 },
@@ -384,6 +443,99 @@
         { pos:new pc.Vec3(roomSize/2 - 0.16, 3.5,   0),  yaw:-90 },
         { pos:new pc.Vec3(roomSize/2 - 0.16, 3.5,  15),  yaw:-90 }
       ];
+
+      let thuFramePos = null;
+      let thuInRange = false;
+
+      function startThuAudio() {
+        if (thuInRange) return;
+        thuInRange = true;
+        notifyThuIframe('start-music');
+      }
+
+      function stopThuAudio() {
+        if (!thuInRange) return;
+        thuInRange = false;
+        notifyThuIframe('stop-music');
+      }
+
+      // Add the big Thu frame on the front wall with cycling GIFs (no bland placeholder)
+      const thuGifFiles = Array.from({ length: 49 }, (_, i) => `thu/myndir/mynd${i + 1}.gif`);
+      const thuMat = new pc.StandardMaterial();
+      thuMat.cull = pc.CULLFACE_NONE;
+      const frame = new pc.Entity("thuFrame");
+      frame.addComponent("render", { type:"plane", material: thuMat });
+      const targetH = 4.5;
+      let height = Math.min(targetH, wallHeight - 0.8);
+      let width = 8.0;
+      frame.setLocalScale(width, 1, height);
+      const pos = thuSpot.pos.clone();
+      pos.y = 1.0 + (height / 2);
+      frame.setLocalPosition(pos);
+      frame.setLocalEulerAngles(-90, thuSpot.yaw, 180);
+      app.root.addChild(frame);
+      thuFramePos = frame.getLocalPosition().clone();
+
+      let thuGifIndex = 0;
+      function setThuGif(idx) {
+        const file = thuGifFiles[idx % thuGifFiles.length];
+        app.assets.loadFromUrl(file, "texture", (err, asset) => {
+          if (!err && asset && asset.resource) {
+            thuMat.diffuseMap = asset.resource;
+            thuMat.emissiveMap = asset.resource;
+            thuMat.emissive.set(1,1,1);
+          } else {
+            thuMat.diffuse.set(0.08, 0.12, 0.22);
+            thuMat.emissive.set(0.18, 0.32, 0.65);
+          }
+          thuMat.update();
+        });
+      }
+      setThuGif(thuGifIndex);
+      setInterval(() => {
+        thuGifIndex = (thuGifIndex + 1) % thuGifFiles.length;
+        setThuGif(thuGifIndex);
+      }, 6000);
+
+      // Add the Myndband frame on the front wall with cycling stills
+      const myndFiles = Array.from({ length: 20 }, (_, i) => `Myndband2/Bakgrunnsmyndir/mynd${i + 1}.avif`);
+      const myndMat = new pc.StandardMaterial();
+      myndMat.cull = pc.CULLFACE_NONE;
+      const myndFrame = new pc.Entity("myndFrame");
+      myndFrame.addComponent("render", { type:"plane", material: myndMat });
+      {
+        const targetH = 3.8;
+        let height = Math.min(targetH, wallHeight - 1.0);
+        let width = 6.5;
+        myndFrame.setLocalScale(width, 1, height);
+        const pos = myndSpot.pos.clone();
+        pos.y = 1.0 + (height / 2);
+        myndFrame.setLocalPosition(pos);
+        myndFrame.setLocalEulerAngles(-90, myndSpot.yaw, 180);
+        app.root.addChild(myndFrame);
+      }
+      const myndFramePos = myndFrame.getLocalPosition().clone();
+
+      let myndIndex = 0;
+      function setMyndStill(idx) {
+        const file = myndFiles[idx % myndFiles.length];
+        app.assets.loadFromUrl(file, "texture", (err, asset) => {
+          if (!err && asset && asset.resource) {
+            myndMat.diffuseMap = asset.resource;
+            myndMat.emissiveMap = asset.resource;
+            myndMat.emissive.set(1,1,1);
+          } else {
+            myndMat.diffuse.set(0.1, 0.12, 0.2);
+            myndMat.emissive.set(0.18, 0.22, 0.4);
+          }
+          myndMat.update();
+        });
+      }
+      setMyndStill(myndIndex);
+      setInterval(() => {
+        myndIndex = (myndIndex + 1) % myndFiles.length;
+        setMyndStill(myndIndex);
+      }, 6000);
 
       photos.forEach((file, i) => {
         app.assets.loadFromUrl(file, "texture", (err, asset) => {
@@ -415,8 +567,8 @@
           frame.setLocalScale(width, 1, height);
           const spot = photoSpots[i % photoSpots.length];
           const pos = spot.pos.clone();
-          // center vertically based on frame height
-          pos.y = 1.2 + (height / 2);
+          // keep all frames at same center height so they don't "lift" when taller
+          pos.y = 3.5;
           frame.setLocalPosition(pos);
           // Tilt up to vertical (-90 on X) then yaw to face the room correctly
           // Flip 180 on Z to avoid upside-down textures
@@ -448,13 +600,6 @@
         plinth.setLocalPosition(x, 0.25, z);
         app.root.addChild(plinth);
       }
-
-      // Animate cube so you know it's alive
-      let t = 0;
-      app.on('update', (dt) => {
-        t += dt;
-        cube.setLocalEulerAngles(t * 30, t * 60, 0);
-      });
 
       // Load GLBs
       const glbs = ["model1.glb","model2.glb","model3.glb","model4.glb","model5.glb","model6.glb"];
@@ -530,8 +675,11 @@
       canvas.addEventListener('touchend', () => touch.active = false, { passive:true });
 
       const moveSpeed = (matchMedia("(pointer:coarse)").matches ? 3.5 : 5.5);
+      let t = 0;
 
       app.on('update', (dt) => {
+        t += dt;
+        cube.setLocalEulerAngles(t * 30, t * 60, 0);
         camera.setLocalEulerAngles(0, yaw, 0);
 
         const forward = keys['KeyW'] || keys['ArrowUp'];
@@ -567,6 +715,33 @@
         const camPos = camera.getLocalPosition();
         skyStars.setLocalPosition(camPos);
         skyAurora.setLocalPosition(camPos);
+
+        // Thu proximity audio trigger
+        if (thuFramePos) {
+          const dx = camPos.x - thuFramePos.x;
+          const dz = camPos.z - thuFramePos.z;
+          const dist = Math.hypot(dx, dz);
+          if (dist < 8) {
+            startThuAudio();
+            showThu();
+          } else {
+            stopThuAudio();
+            hideThu();
+          }
+        }
+        // Myndband proximity
+        if (myndFramePos) {
+          const dx2 = camPos.x - myndFramePos.x;
+          const dz2 = camPos.z - myndFramePos.z;
+          const dist2 = Math.hypot(dx2, dz2);
+          if (dist2 < 8) {
+            notifyMyndIframe('start-music');
+            showMynd();
+          } else {
+            notifyMyndIframe('stop-music');
+            hideMynd();
+          }
+        }
 
         // Rotate GLB statues smoothly using accumulated time
         glbEntities.forEach((item) => {

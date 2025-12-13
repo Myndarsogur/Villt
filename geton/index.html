@@ -59,6 +59,7 @@
   <audio id="music" src="geton.mp3" autoplay loop></audio>
 
   <script>
+    const music = document.getElementById('music');
     const totalImages = 8;
     const imagePaths = Array.from({ length: totalImages }, (_, i) => `thu2/mynd${i + 1}.gif`);
 
@@ -187,19 +188,19 @@ function showPreviewImage(index) {
 
     goForward();
 
+    // Try to start strax (popup opnun getur talist "user gesture" í sumum vöfrum)
+    music.play().catch((e) => console.log('Ekki tókst að hefja lag við ræsingu:', e));
+
     function startMusicOnce() {
-      const music = document.getElementById('music');
       if (music.paused) {
         music.play().catch((e) => console.log('Ekki tókst að spila lagið:', e));
       }
-      document.removeEventListener('click', startMusicOnce);
-      document.removeEventListener('keydown', startMusicOnce);
-      document.removeEventListener('mousedown', startMusicOnce);
     }
 
-    document.addEventListener('click', startMusicOnce);
-    document.addEventListener('keydown', startMusicOnce);
-    document.addEventListener('mousedown', startMusicOnce);
+    ['click', 'keydown', 'keypress', 'keyup', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend'].forEach((evt) => {
+      document.addEventListener(evt, startMusicOnce, { once: true, capture: true });
+      window.addEventListener(evt, startMusicOnce, { once: true, capture: true });
+    });
 
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'start-music') {
