@@ -2,7 +2,8 @@
 <html lang="is">
 <head>
   <meta charset="UTF-8" />
-  <title>Djúpivogur 2D kort</title>
+  <title>Djúpivogur – 2D loftkort og gögn</title>
+  <meta name="description" content="Gagnvirkt 2D loftkort af Djúpavogi byggt á OSM og Terrarium DEM gögnum með vega-, bygginga- og áhugapunktalitum." />
   <style>
     :root {
       color-scheme: dark;
@@ -29,6 +30,11 @@
       backdrop-filter: blur(8px);
       border-bottom: 1px solid rgba(255,255,255,0.08);
       z-index: 2;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
     }
     #map-wrap {
       flex: 1;
@@ -61,9 +67,7 @@
 </head>
 <body>
   <header>
-    <div>
-      <strong>Djúpivogur</strong> — 2D loftkort (flatt)
-    </div>
+    <h1>Djúpivogur – 2D loftkort og gögn</h1>
     <div style="font-size:13px;color:#9fb1c8">Gögn: OSM &amp; Terrarium DEM</div>
   </header>
   <div id="map-wrap">
