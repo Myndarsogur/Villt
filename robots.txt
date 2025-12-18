@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://villt.is/sitemap.xml
